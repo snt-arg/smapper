@@ -1,0 +1,10 @@
+/**:
+    ros__parameters:
+      device_id: 0
+      image_width: 640
+      image_height: 480
+      framerate: 30
+      frame_id: left_camera
+      camera_name: "left_camera"
+      topic_name: "camera/left/image_raw"
+      camera_info_url: "package://argus_camera_ros/config/default_info.yaml"

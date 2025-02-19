@@ -16,17 +16,17 @@
  * oldest item or fail based on the override flag.
  *
  * @tparam T The type of elements stored in the ring buffer.
- * @tparam capacity The maximum number of elements the buffer can hold.
  */
-template <typename T, size_t capacity>
+template <typename T>
 class RingBuffer {
    public:
     /**
      * @brief Constructs a new RingBuffer object.
      *
-     * Initializes the ring buffer with a fixed capacity.
+     * @param capacity Internal ring buffer capacity.
      */
-    RingBuffer();
+    RingBuffer(size_t capacity = 8)
+        : buffer_(capacity), capacity_(capacity), head_(0), tail_(0), size_(0) {}
 
     /**
      * @brief Pushes an item into the ring buffer.
@@ -49,7 +49,23 @@ class RingBuffer {
      * @return true if the item was successfully pushed into the buffer; false if
      * the buffer was full and override is true.
      */
-    bool push(const T &item, bool override = false);
+    bool push(const T &item, bool override = false) {
+        std::unique_lock<std::mutex> lock(mutex_);
+
+        if (size_ >= capacity_) {
+            if (override) return false;  // Buffer full
+            tail_ = (tail_ + 1) & capacity_;
+            --size_;
+        }
+
+        buffer_[head_] = item;
+        head_ = (head_ + 1) % capacity_;
+        ++size_;
+
+        lock.unlock();
+        cond_.notify_one();
+        return true;
+    }
 
     /**
      * @brief Pops (removes) an item from the ring buffer.
@@ -66,7 +82,17 @@ class RingBuffer {
      * @return true if an item was successfully popped; false if the buffer was
      * stopped before an item could be retrieved.
      */
-    bool pop(T &item);
+    bool pop(T &item) {
+        std::unique_lock<std::mutex> lock(mutex_);
+        cond_.wait(lock, [&] { return size_ > 0 || !running_; });
+
+        if (!running_) return false;  // Shutdown signal
+
+        item = buffer_[tail_];
+        tail_ = (tail_ + 1) % capacity_;
+        --size_;
+        return true;
+    }
 
     /**
      * @brief Stops the ring buffer.
@@ -75,7 +101,12 @@ class RingBuffer {
      * indicating that no further operations should block, and notifies all
      * waiting threads so they can exit.
      */
-    void stop();
+    void stop() {
+        running_ = false;
+        cond_.notify_all();
+    }
+
+    int size() { return size_; }
 
    private:
     std::vector<T> buffer_;     ///< Internal storage for buffer elements.

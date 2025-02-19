@@ -66,7 +66,10 @@ file(GLOB JETSON_SOURCES CONFIGURE_DEPENDS "${JETSON_CLASS_DIR}/*.cpp")
 
 SET(DEPENDENCIES rclcpp std_msgs sensor_msgs geometry_msgs tf2 tf2_ros OpenCV cv_bridge)
 SET(LIBS ${JETSON_LIBS})
-SET(SOURCES ${JETSON_SOURCES})
+
+
+file(GLOB SRC_FILES CONFIGURE_DEPENDS "src/argus_camera_ros/*.cpp")
+SET(SOURCES ${JETSON_SOURCES} ${SRC_FILES})
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include/
@@ -88,10 +91,6 @@ add_executable(single_camera src/single_camera_node.cpp ${SOURCES})
 ament_target_dependencies(single_camera ${DEPENDENCIES})
 target_link_libraries(single_camera ${LIBS})
 
-add_executable(multi_camera src/multi_camera_node.cpp ${SOURCES})
-ament_target_dependencies(multi_camera ${DEPENDENCIES})
-target_link_libraries(multi_camera ${LIBS})
-
 install(
   DIRECTORY include
   DESTINATION include
@@ -100,7 +99,6 @@ install(
 install(TARGETS 
   argus_camera_node
   single_camera
-  multi_camera
   DESTINATION lib/${PROJECT_NAME}
   INCLUDES DESTINATION include
 )

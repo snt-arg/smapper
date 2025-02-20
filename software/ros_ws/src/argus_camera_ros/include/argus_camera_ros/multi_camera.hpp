@@ -34,12 +34,22 @@ class MultiCamera {
     bool init();
     void start_capture();
     void stop_capture();
-    void wait();
-    bool getProcessedFrames(std::vector<cv::Mat> &frames);
+    bool get_frames(std::vector<cv::Mat> &frames);
 
    private:
     void capture_thread_execution();
     void processing_thread_execution();
+    void wait_();
+
+    bool get_requested_cameras_(std::vector<int> ids,
+                                ICameraProvider *provider_i,
+                                std::vector<CameraDevice *> &cameras);
+
+    bool get_sensor_modes_(std::vector<CameraDevice *> &cameras,
+                           std::vector<std::vector<ISensorMode *>> &sensor_modes);
+
+    bool setup_cameras_(ICameraProvider *provider_i,
+                        std::vector<CameraDevice *> &cameras);
 
     Config config_;
     bool initialized;
@@ -53,7 +63,7 @@ class MultiCamera {
 
     // Buffers
     RingBuffer<NvBufSurface **> raw_buffer_;
-    // RingBuffer<std::vector<cv::Mat>> processed_buffer_;
+    RingBuffer<std::vector<cv::Mat>> processed_buffer_;
 
     // Threads
     std::thread capture_thread_;

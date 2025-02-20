@@ -83,9 +83,9 @@ link_directories(
 
 
 # Executables
-add_executable(single_camera src/single_camera_node.cpp ${SOURCES})
-ament_target_dependencies(single_camera ${DEPENDENCIES})
-target_link_libraries(single_camera ${LIBS})
+add_executable(argus_camera_node src/argus_camera_node.cpp ${SOURCES})
+ament_target_dependencies(argus_camera_node ${DEPENDENCIES})
+target_link_libraries(argus_camera_node ${LIBS})
 
 install(
   DIRECTORY include
@@ -93,7 +93,7 @@ install(
 )
 
 install(TARGETS 
-  single_camera
+  argus_camera_node
   DESTINATION lib/${PROJECT_NAME}
   INCLUDES DESTINATION include
 )

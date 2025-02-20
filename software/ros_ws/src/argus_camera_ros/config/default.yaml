@@ -1,10 +1,25 @@
-/**:
+argus_camera_node:
     ros__parameters:
-      device_id: 0
+      devices: [0, 1, 2, 3]
       image_width: 640
       image_height: 480
-      framerate: 30
-      frame_id: left_camera
-      camera_name: "left_camera"
-      topic_name: "camera/left/image_raw"
-      camera_info_url: "package://argus_camera_ros/config/default_info.yaml"
+      framerate: 20
+      device_mode: 2
+
+      ensure_sync: true 
+
+      frame_ids: 
+        - front_left_camera
+        - front_righ_camera
+        - left_camera
+        - right_camera
+      camera_names:
+        - "/camera/front_left/image_raw"
+        - "/camera/front_right/image_raw"
+        - "/camera/left/image_raw"
+        - "/camera/right/image_raw"
+      camera_infos:
+        - "package://argus_camera_ros/config/default_info.yaml"
+        - "package://argus_camera_ros/config/default_info.yaml"
+        - "package://argus_camera_ros/config/default_info.yaml"
+        - "package://argus_camera_ros/config/default_info.yaml"

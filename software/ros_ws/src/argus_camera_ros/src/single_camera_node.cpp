@@ -1,27 +1,17 @@
-#include <unistd.h>
-
-#include <iostream>
+// #include <iostream>
+// #include <memory>
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp/utilities.hpp>
 
-#include "argus_camera_ros/multi_camera.hpp"
+#include "argus_camera_ros/camera_node.hpp"
 
 int main(int argc, char** argv) {
     rclcpp::init(argc, argv);
-    RCLCPP_INFO(rclcpp::get_logger("main"), "Hello from single camera node");
+    std::shared_ptr<ArgusCameraNode> camera_node = std::make_shared<ArgusCameraNode>();
 
-    MultiCamera::Config config{
-        .device_ids = {0, 1, 2, 3},
-        .image_width = 640,
-        .image_height = 480,
-        .framerate = 20,
-        .buffer_size = 8,
-    };
+    rclcpp::spin(camera_node);
 
-    MultiCamera cameras(config);
-    if (cameras.init()) cameras.start_capture();
-
-    cameras.wait();
-    cameras.stop_capture();
+    std::cout << "Reached" << std::endl;
 
     rclcpp::shutdown();
     return 0;

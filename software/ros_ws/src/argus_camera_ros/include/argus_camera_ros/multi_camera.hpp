@@ -36,11 +36,11 @@ class MultiCamera {
      * Contains the parameters used to configure the MultiCamera instance.
      */
     struct Config {
-        const std::vector<int> device_ids;  ///< List of camera device IDs to be used.
-        int sensor_mode;                    ///< Sensor mode for image capture (0-3).
-        int image_width;                    ///< Target width for resized images.
-        int image_height;                   ///< Target height for resized images.
-        int framerate;                      ///< Framerate at which images are captured.
+        std::vector<int64> device_ids;  ///< List of camera device IDs to be used.
+        int sensor_mode;                ///< Sensor mode for image capture (0-3).
+        int image_width;                ///< Target width for resized images.
+        int image_height;               ///< Target height for resized images.
+        int framerate;                  ///< Framerate at which images are captured.
         int buffer_size;  ///< Size of the internal buffer for unprocessed images.
     };
 
@@ -140,7 +140,7 @@ class MultiCamera {
      * @return true if the requested cameras were successfully retrieved; false
      * otherwise.
      */
-    bool get_requested_cameras_(std::vector<int> ids,
+    bool get_requested_cameras_(std::vector<int64> ids,
                                 ICameraProvider *provider_i,
                                 std::vector<CameraDevice *> &cameras);
 
@@ -155,7 +155,7 @@ class MultiCamera {
      * otherwise.
      */
     bool get_sensor_modes_(std::vector<CameraDevice *> &cameras,
-                           std::vector<std::vector<ISensorMode *>> &sensor_modes);
+                           std::vector<std::vector<SensorMode *>> &sensor_modes);
 
     /**
      * @brief Sets up the cameras using the Argus CameraProvider.

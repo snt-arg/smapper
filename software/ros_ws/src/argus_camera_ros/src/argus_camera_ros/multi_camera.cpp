@@ -19,7 +19,8 @@ MultiCamera::MultiCamera(Config &config)
       sessions_(config_.device_ids.size()),
       requests_(config_.device_ids.size()),
       consumers_(config_.device_ids.size()),
-      raw_buffer_(config_.buffer_size) {}
+      raw_buffer_(config_.buffer_size),
+      processed_buffer_(config_.buffer_size) {}
 
 MultiCamera::~MultiCamera() {
     stop_capture();
@@ -68,7 +69,7 @@ bool MultiCamera::get_frames(std::vector<cv::Mat> &frames) {
     return processed_buffer_.pop(frames);
 }
 
-bool MultiCamera::get_requested_cameras_(std::vector<int> ids,
+bool MultiCamera::get_requested_cameras_(std::vector<int64> ids,
                                          ICameraProvider *provider_i,
                                          std::vector<CameraDevice *> &cameras) {
     std::vector<CameraDevice *> devices;
@@ -103,21 +104,16 @@ bool MultiCamera::get_requested_cameras_(std::vector<int> ids,
 
 bool MultiCamera::get_sensor_modes_(
     std::vector<CameraDevice *> &cameras,
-    std::vector<std::vector<ISensorMode *>> &sensor_modes) {
+    std::vector<std::vector<SensorMode *>> &sensor_modes) {
     for (int i = 0; i < cameras.size(); i++) {
         ICameraProperties *properties = interface_cast<ICameraProperties>(cameras[i]);
         if (!properties) return false;
 
         std::vector<SensorMode *> modes;
         properties->getAllSensorModes(&modes);
-        std::vector<ISensorMode *> modes_i;
+        std::vector<SensorMode *> modes_i;
 
-        for (auto &mode : modes) {
-            modes_i.push_back(interface_cast<ISensorMode>(mode));
-            if (!modes_i.back()) return false;
-        }
-
-        sensor_modes.push_back(modes_i);
+        sensor_modes.push_back(modes);
     }
 
     return true;
@@ -125,6 +121,16 @@ bool MultiCamera::get_sensor_modes_(
 
 bool MultiCamera::setup_cameras_(ICameraProvider *provider_i,
                                  std::vector<CameraDevice *> &cameras) {
+    std::vector<std::vector<SensorMode *>> sensor_modes;
+    if (!get_sensor_modes_(cameras, sensor_modes)) return false;
+
+    if (config_.sensor_mode > sensor_modes[0].size() || config_.sensor_mode < 0) {
+        std::cout << "Sensor mode " << config_.sensor_mode << " not available."
+                  << std::endl;
+        // TODO: printout the available modes
+        return false;
+    }
+
     // TODO: This function can be decomposed into smaller sub-functions
     for (int i = 0; i < cameras.size(); i++) {
         CameraDevice *device = cameras[i];
@@ -171,7 +177,7 @@ bool MultiCamera::setup_cameras_(ICameraProvider *provider_i,
             return false;
         }
 
-        // TODO: set here the sensor mode
+        iSourceSettings->setSensorMode(sensor_modes[i][config_.sensor_mode]);
 
         iSourceSettings->setFrameDurationRange(
             Range<uint64_t>(1e9 / config_.framerate));
@@ -191,9 +197,6 @@ bool MultiCamera::init() {
 
     std::vector<CameraDevice *> cameras;
     if (!get_requested_cameras_(config_.device_ids, provider_i, cameras)) return false;
-
-    std::vector<std::vector<ISensorMode *>> sensor_modes;
-    if (!get_sensor_modes_(cameras, sensor_modes)) return false;
 
     if (!setup_cameras_(provider_i, cameras)) return false;
 
@@ -237,8 +240,6 @@ void MultiCamera::capture_thread_execution() {
                 break;
             }
 
-            std::cout << iFrame->getTime() << "\n\t";
-
             NV::IImageNativeBuffer *iNativeBuffer =
                 interface_cast<NV::IImageNativeBuffer>(iFrame->getImage());
             if (!iNativeBuffer) {
@@ -265,7 +266,6 @@ void MultiCamera::capture_thread_execution() {
                 return;
             }
         }
-        std::cout << "-----------------------------------------\n";
         raw_buffer_.push(buf_surfaces);
     }
 }

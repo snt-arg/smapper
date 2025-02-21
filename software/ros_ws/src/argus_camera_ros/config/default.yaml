@@ -3,23 +3,22 @@ argus_camera_node:
       devices: [0, 1, 2, 3]
       image_width: 640
       image_height: 480
-      framerate: 20
-      device_mode: 2
-
-      ensure_sync: true 
+      framerate: 30
+      sensor_mode: 2
+      buffer_size: 8
 
       frame_ids: 
         - front_left_camera
         - front_righ_camera
-        - left_camera
         - right_camera
+        - left_camera
       camera_names:
-        - "/camera/front_left/image_raw"
-        - "/camera/front_right/image_raw"
-        - "/camera/left/image_raw"
-        - "/camera/right/image_raw"
-      camera_infos:
-        - "package://argus_camera_ros/config/default_info.yaml"
-        - "package://argus_camera_ros/config/default_info.yaml"
-        - "package://argus_camera_ros/config/default_info.yaml"
-        - "package://argus_camera_ros/config/default_info.yaml"
+        - "front_left"
+        - "front_right"
+        - "right"
+        - "left"
+      camera_urls:
+        - "package://argus_camera_ros/config/front_left_info.yaml"
+        - "package://argus_camera_ros/config/front_right_info.yaml"
+        - "package://argus_camera_ros/config/right_info.yaml"
+        - "package://argus_camera_ros/config/left_info.yaml"

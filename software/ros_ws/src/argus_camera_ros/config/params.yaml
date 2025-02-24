@@ -10,15 +10,15 @@ argus_camera_node:
       frame_ids: 
         - front_left_camera
         - front_righ_camera
-        - right_camera
-        - left_camera
+        - side_right_camera
+        - side_left_camera
       camera_names:
         - "front_left"
         - "front_right"
-        - "right"
-        - "left"
+        - "side_right"
+        - "side_left"
       camera_urls:
         - "package://argus_camera_ros/config/front_left_info.yaml"
         - "package://argus_camera_ros/config/front_right_info.yaml"
-        - "package://argus_camera_ros/config/right_info.yaml"
-        - "package://argus_camera_ros/config/left_info.yaml"
+        - "package://argus_camera_ros/config/side_right_info.yaml"
+        - "package://argus_camera_ros/config/side_left_info.yaml"

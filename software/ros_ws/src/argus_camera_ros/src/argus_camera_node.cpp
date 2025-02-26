@@ -1,5 +1,3 @@
-// #include <iostream>
-// #include <memory>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/utilities.hpp>
 
@@ -10,8 +8,6 @@ int main(int argc, char** argv) {
     std::shared_ptr<ArgusCameraNode> camera_node = std::make_shared<ArgusCameraNode>();
 
     rclcpp::spin(camera_node);
-
-    std::cout << "Reached" << std::endl;
 
     rclcpp::shutdown();
     return 0;

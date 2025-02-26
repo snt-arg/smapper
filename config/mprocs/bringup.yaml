@@ -1,0 +1,16 @@
+procs:
+  Bringup:
+    shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch smapper_bringup bringup.launch.py"
+    autostart: false
+  Ouster:
+    shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch ouster_ros sensor.launch.xml sensor_hostname:=os-122436001165.local"
+    autostart: false
+  ArgusCameras:
+    shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch argus_camera_ros  argus_camera.launch.py"
+    autostart: false
+  RecordBag:
+    stop: 
+      send-keys: ["<C-c>"]
+    cmd:
+      - bag_record
+    autostart: false

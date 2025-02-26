@@ -2,7 +2,6 @@
 #define CAMERA_NODE_HPP
 
 #include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/detail/camera_info__struct.hpp>
 #include <sensor_msgs/msg/image.hpp>
 
 #include "argus_camera_ros/multi_camera.hpp"

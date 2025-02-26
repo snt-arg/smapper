@@ -1,5 +1,7 @@
 
 
+#include <nvbufsurface.h>
+
 #include <algorithm>
 #include <argus_camera_ros/multi_camera.hpp>
 #include <array>
@@ -9,7 +11,6 @@
 #include <iterator>
 #include <thread>
 
-#include "nvbufsurface.h"
 using namespace std::chrono_literals;
 
 MultiCamera::MultiCamera(Config &config)
@@ -75,19 +76,19 @@ bool MultiCamera::get_requested_cameras_(std::vector<int64> ids,
     std::vector<CameraDevice *> devices;
     provider_i->getCameraDevices(&devices);
     if (devices.empty()) {
-        std::cerr << "Failed to get devices" << std::endl;
+        std::cerr << "[ERROR] Failed to get devices" << std::endl;
         return false;
     }
 
     if (ids.size() > devices.size()) {
-        std::cerr << "There are only " << devices.size() << "cameras available"
+        std::cerr << "[ERROR] There are only " << devices.size() << "cameras available"
                   << std::endl;
         return false;
     }
 
     for (int id : ids) {
         if (id < 0 || id >= devices.size()) {
-            std::cerr << id << " is not a valid camera id" << std::endl;
+            std::cerr << "[ERROR] " << id << " is not a valid camera id" << std::endl;
             return false;
         }
     }
@@ -125,7 +126,7 @@ bool MultiCamera::setup_cameras_(ICameraProvider *provider_i,
     if (!get_sensor_modes_(cameras, sensor_modes)) return false;
 
     if (config_.sensor_mode > sensor_modes[0].size() || config_.sensor_mode < 0) {
-        std::cout << "Sensor mode " << config_.sensor_mode << " not available."
+        std::cerr << "[ERROR] Sensor mode " << config_.sensor_mode << " not available."
                   << std::endl;
         // TODO: printout the available modes
         return false;
@@ -142,7 +143,7 @@ bool MultiCamera::setup_cameras_(ICameraProvider *provider_i,
 
         IEventProvider *event_provider_i = interface_cast<IEventProvider>(sessions_[i]);
         if (!event_provider_i || !event_provider_i) {
-            std::cerr << "Failed to create CaptureSession" << std::endl;
+            std::cerr << "[ERROR] Failed to create CaptureSession" << std::endl;
             return false;
         }
 
@@ -151,7 +152,8 @@ bool MultiCamera::setup_cameras_(ICameraProvider *provider_i,
         IEGLOutputStreamSettings *egl_stream_settings_i =
             interface_cast<IEGLOutputStreamSettings>(stream_settings);
         if (!egl_stream_settings_i) {
-            std::cout << "Failed to create EglOutputStreamSettings" << std::endl;
+            std::cerr << "[ERROR] Failed to create EglOutputStreamSettings"
+                      << std::endl;
             return false;
         }
 
@@ -165,7 +167,7 @@ bool MultiCamera::setup_cameras_(ICameraProvider *provider_i,
         requests_[i].reset(capture_session_i->createRequest());
         IRequest *iRequest = interface_cast<IRequest>(requests_[i]);
         if (!iRequest) {
-            std::cerr << "Failed to create Request" << std::endl;
+            std::cerr << "[ERROR] Failed to create Request" << std::endl;
             return false;
         }
         iRequest->enableOutputStream(streams_[i].get());
@@ -173,9 +175,12 @@ bool MultiCamera::setup_cameras_(ICameraProvider *provider_i,
         ISourceSettings *iSourceSettings =
             interface_cast<ISourceSettings>(iRequest->getSourceSettings());
         if (!iSourceSettings) {
-            std::cerr << "Failed to get ISourceSettings interface" << std::endl;
+            std::cerr << "[ERROR] Failed to get ISourceSettings interface" << std::endl;
             return false;
         }
+
+        // IAutoControlSettings *control_settings =
+        // interface_cast<IAutoControlSettings>(iRequest->getAutoControlSettings());
 
         iSourceSettings->setSensorMode(sensor_modes[i][config_.sensor_mode]);
 
@@ -192,7 +197,7 @@ bool MultiCamera::init() {
     provider_ = UniqueObj<CameraProvider>(CameraProvider::create());
     ICameraProvider *provider_i = interface_cast<ICameraProvider>(provider_);
     if (!provider_i) {
-        std::cerr << "Failed to get Camera Provider interface" << std::endl;
+        std::cerr << "[ERROR] Failed to get Camera Provider interface" << std::endl;
     }
 
     std::vector<CameraDevice *> cameras;
@@ -213,30 +218,42 @@ void MultiCamera::capture_thread_execution() {
         frame_consumers[i] = interface_cast<IFrameConsumer>(consumers_[i]);
 
         if (!frame_consumers[i]) {
-            std::cerr << "[Capture Thread] Failed to get IFrameConsumer Interface"
-                      << std::endl;
+            std::cerr << "[ERROR] Failed to get IFrameConsumer Interface" << std::endl;
             return;
         }
 
         if (egl_output_streams[i]->waitUntilConnected(1 * 100000000) !=
             Argus::STATUS_OK) {
-            std::cerr << "Stream failed to connect." << std::endl;
+            std::cerr << "[ERROR] Stream failed to connect." << std::endl;
             return;
         }
     }
-    std::cout << "Capture ready" << std::endl;
+
+    std::cout << "[INFO] Argus Stream Capture is now ready" << std::endl;
 
     int dma_bufs[streams_.size()];
     NvBufSurface **buf_surfaces = new NvBufSurface *[streams_.size()];
     Size2D<uint32_t> resolution(config_.image_width, config_.image_height);
+    bool failed_aquire = false;
 
     while (running_) {
+        failed_aquire = false;
         // Acquire frames
         for (int i = 0; i < streams_.size(); i++) {
-            UniqueObj<Frame> frame(frame_consumers[i]->acquireFrame());
+            Status status;
+            UniqueObj<Frame> frame(
+                frame_consumers[i]->acquireFrame(1000000000, &status));
+
+            if (status == Argus::STATUS_TIMEOUT) {
+                failed_aquire = true;
+                std::cout << "[WARN] Failed to aquire frame after timeout" << std::endl;
+                break;
+            }
+
             IFrame *iFrame = interface_cast<IFrame>(frame);
             if (!iFrame) {
-                std::cout << "Failed to get iframe: " << std::endl;
+                failed_aquire = true;
+                std::cout << "[Warn] Failed to get iframe: " << std::endl;
                 break;
             }
 
@@ -244,7 +261,8 @@ void MultiCamera::capture_thread_execution() {
                 interface_cast<NV::IImageNativeBuffer>(iFrame->getImage());
             if (!iNativeBuffer) {
                 delete[] buf_surfaces;
-                std::cerr << "IImageNativeBuffer not supported by Image." << std::endl;
+                std::cerr << "[ERROR] IImageNativeBuffer not supported by Image."
+                          << std::endl;
                 return;
             }
 
@@ -257,16 +275,16 @@ void MultiCamera::capture_thread_execution() {
                 if (-1 ==
                     NvBufSurfaceFromFd(dma_bufs[i], (void **)(&buf_surfaces[i]))) {
                     delete[] buf_surfaces;
-                    std::cerr << "Cannot get NvBufSurface from fd" << std::endl;
+                    std::cerr << "[ERROR] Cannot get NvBufSurface from fd" << std::endl;
                     return;
                 }
             } else if (iNativeBuffer->copyToNvBuffer(dma_bufs[i]) != STATUS_OK) {
                 delete[] buf_surfaces;
-                std::cerr << "Cannot get NvBufSurface from fd" << std::endl;
+                std::cerr << "[ERROR] Cannot get NvBufSurface from fd" << std::endl;
                 return;
             }
         }
-        raw_buffer_.push(buf_surfaces);
+        if (!failed_aquire) raw_buffer_.push(buf_surfaces);
     }
 }
 

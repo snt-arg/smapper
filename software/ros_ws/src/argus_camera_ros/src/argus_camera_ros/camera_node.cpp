@@ -31,8 +31,6 @@ static const std::vector<std::string> DEFAULT_URLS{
     "package://argus_camera_ros/config/left_info.yaml"};
 
 ArgusCameraNode::ArgusCameraNode() : Node("argus_camera_node"), cameras_config_() {
-    RCLCPP_INFO(this->get_logger(), "Hello From CameraNode");
-
     declare_parameters_();
     read_parameters_();
 
@@ -57,7 +55,7 @@ void ArgusCameraNode::init_pubs_() {
 
         camera_info_pubs_.push_back(
             this->create_publisher<sensor_msgs::msg::CameraInfo>(
-                camera_names_[i] + "/camera_info", 10));
+                "/camera/" + camera_names_[i] + "/camera_info", 10));
 
         // camera_info_manager_ =
         // std::make_unique<camera_info_manager::CameraInfoManager>(this,
@@ -110,6 +108,7 @@ void ArgusCameraNode::pub_callback_() {
         img_pubs_[i]->publish(*msg);
 
         sensor_msgs::msg::CameraInfo camera_info = camera_info_[i]->getCameraInfo();
+        camera_info.header = header;
         camera_info_pubs_[i]->publish(camera_info);
     }
 }

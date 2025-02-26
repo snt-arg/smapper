@@ -1,0 +1,57 @@
+#!/bin/bash
+
+BAG_NAME=$1
+PATH_TO_STORE="$HOME/Rosbags"
+DATE=$(date '+%Y_%m_%d-%H_%M_%S')
+
+BASE_TOPICS="
+    /tf
+    /tf_static
+"
+
+OUSTER_TOPICS="
+    /ouster/points
+    /ouster/imu
+"
+
+FAST_LIO_TOPICS="
+    /platform/odometry
+    /path
+    /cloud/undistorted
+"
+
+CAMERA_TOPICS="
+    /camera/front_left/camera_info
+    /camera/front_left/image_raw
+    /camera/front_right/camera_info
+    /camera/front_right/image_raw
+    /camera/side_right/camera_info
+    /camera/side_right/image_raw
+    /camera/side_left/camera_info
+    /camera/side_left/image_raw
+"
+
+REALSENSE_TOPICS="
+    /camera/camera/color/image_raw
+    /camera/camera/color/camera_info
+    /camera/camera/depth/image_rect_raw
+    /camera/camera/depth/camera_info
+    /camera/camera/extrinsics/depth_to_color
+"
+
+
+# AVAILABLE TOPICS TO RECORD
+TOPICS_DEFAULT="
+    ${BASE_TOPICS}
+    ${OUSTER_TOPICS}
+    ${CAMERA_TOPICS}
+"
+
+if [[ $BAG_NAME == "" ]]; then
+    OUTPUT_PATH="$PATH_TO_STORE/smapper_bag_$DATE"
+else
+    OUTPUT_PATH="$PATH_TO_STORE/${BAG_NAME}_$DATE"
+fi
+
+source /opt/ros/humble/setup.bash 
+ros2 bag record -o "$OUTPUT_PATH" $TOPICS_DEFAULT

@@ -9,7 +9,7 @@ argus_camera_node:
 
       frame_ids: 
         - front_left_camera
-        - front_righ_camera
+        - front_right_camera
         - side_right_camera
         - side_left_camera
       camera_names:

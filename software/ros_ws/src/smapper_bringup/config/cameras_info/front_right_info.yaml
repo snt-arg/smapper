@@ -4,14 +4,14 @@ camera_name: front_right
 camera_matrix:
   rows: 3
   cols: 3
-  data: [401.00508,   0.     , 312.86747,
-           0.     , 401.85177, 241.2044 ,
+  data: [398.86385,   0.     , 321.32216,
+           0.     , 399.56278, 244.60323,
            0.     ,   0.     ,   1.     ]
 distortion_model: plumb_bob
 distortion_coefficients:
   rows: 1
   cols: 5
-  data: [-0.320382, 0.082466, 0.000669, 0.001767, 0.000000]
+  data: [-0.324593, 0.085494, 0.000286, 0.001314, 0.000000]
 rectification_matrix:
   rows: 3
   cols: 3
@@ -21,6 +21,6 @@ rectification_matrix:
 projection_matrix:
   rows: 3
   cols: 4
-  data: [296.68439,   0.     , 311.5257 ,   0.     ,
-           0.     , 347.44803, 241.6515 ,   0.     ,
+  data: [293.2171 ,   0.     , 324.61852,   0.     ,
+           0.     , 343.93542, 246.02136,   0.     ,
            0.     ,   0.     ,   1.     ,   0.     ]

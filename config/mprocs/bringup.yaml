@@ -14,3 +14,6 @@ procs:
     cmd:
       - bag_record
     autostart: false
+  Rviz:
+    shell: bash -c "source /opt/ros/humble/setup.bash && rviz2 -d $HOME/smapper/config/rviz/viz.rviz"
+    autostart: false

@@ -18,6 +18,7 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_eigen REQUIRED)
 find_package(pcl_ros REQUIRED)
 find_package(pcl_conversions REQUIRED)
+find_package(message_filters REQUIRED)
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include/
@@ -26,11 +27,21 @@ include_directories(
     ${PCL_INCLUDE_DIRS}
 )
 
-SET(DEPENDENCIES rclcpp sensor_msgs geometry_msgs cv_bridge tf2_eigen tf2_ros pcl_ros pcl_conversions)
+SET(DEPENDENCIES 
+    rclcpp 
+    sensor_msgs
+    geometry_msgs 
+    cv_bridge 
+    tf2_eigen 
+    tf2_ros 
+    pcl_ros 
+    pcl_conversions 
+    message_filters
+)
 SET(LIBS ${OpenCV_LIBRARIES} ${EIGEN3_LIBRARIES} ${PCL_LIBRARIES})
-SET(SOURCES)
+SET(SOURCES src/camera_lidar_fusion/camera_lidar_fusion.cpp src/camera_lidar_fusion/camera_handler.cpp)
 
-add_executable(camera_lidar_fusion_node src/camera_lidar_fusion_node.cpp)
+add_executable(camera_lidar_fusion_node src/camera_lidar_fusion_node.cpp ${SOURCES})
 ament_target_dependencies(camera_lidar_fusion_node ${DEPENDENCIES})
 target_link_libraries(camera_lidar_fusion_node ${LIBS})
 

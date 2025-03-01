@@ -12,6 +12,8 @@ class CameraHandler {
     Eigen::Vector2d project_lidar_to_camera(Eigen::Vector3d point_3d);
     Eigen::Vector2d pinhole_distort(const Eigen::Vector2d& pt);
     bool transform_initialized();
+    bool got_camera_info();
+    bool got_image_encoding();
 
     // Setters
    public:
@@ -42,6 +44,7 @@ class CameraHandler {
     Eigen::Matrix4d lidar_to_camera_matrix_, lidar_to_camera_inv_matrix_;
 
     bool is_transform_initialized_ = false;
+    bool camera_info_received_ = false;
     std::string camera_frame_id_;
     std::string image_encoding_;
 };

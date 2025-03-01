@@ -1,6 +1,7 @@
 #include "camera_lidar_fusion/camera_handler.hpp"
 
-CameraHandler::CameraHandler() {}
+CameraHandler::CameraHandler()
+    : image_width_(0), image_height_(0), camera_frame_id_(""), image_encoding_("") {}
 CameraHandler::~CameraHandler() {}
 
 Eigen::Vector2d CameraHandler::project_lidar_to_camera(Eigen::Vector3d point_3d) {
@@ -43,6 +44,10 @@ Eigen::Vector2d CameraHandler::pinhole_distort(const Eigen::Vector2d& pt) {
 
 bool CameraHandler::transform_initialized() { return is_transform_initialized_; }
 
+bool CameraHandler::got_camera_info() { return camera_info_received_; }
+
+bool CameraHandler::got_image_encoding() { return image_encoding_ != ""; }
+
 // Setters
 
 void CameraHandler::set_camera_info(
@@ -67,7 +72,12 @@ void CameraHandler::set_camera_info(
     projection_matrix_(1, 1) = msg->p[5];
     projection_matrix_(1, 2) = msg->p[6];
     projection_matrix_(2, 2) = 1;
+
+    camera_info_received_ = true;
+
+    camera_frame_id_ = msg->header.frame_id;
 }
+
 void CameraHandler::set_lidar_to_camera_matrix(Eigen::Matrix4d T_lidar_cam) {
     lidar_to_camera_matrix_ = Eigen::Matrix4d::Identity();
     lidar_to_camera_matrix_ = T_lidar_cam;
@@ -77,6 +87,10 @@ void CameraHandler::set_lidar_to_camera_matrix(Eigen::Matrix4d T_lidar_cam) {
 void CameraHandler::set_lidar_to_camera_inv_matrix(Eigen::Matrix4d T_lidar_cam_inv) {
     lidar_to_camera_inv_matrix_ = Eigen::Matrix4d::Identity();
     lidar_to_camera_inv_matrix_ = T_lidar_cam_inv;
+}
+void CameraHandler::set_lidar_to_camera_projection_matrix() {
+    lidar_to_camera_projection_matrix_ =
+        projection_matrix_ * lidar_to_camera_matrix_.block<4, 4>(0, 0);
 }
 
 void CameraHandler::set_camera_frame_id(std::string frame_id) {

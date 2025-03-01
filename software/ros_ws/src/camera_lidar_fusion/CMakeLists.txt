@@ -26,7 +26,7 @@ include_directories(
     ${PCL_INCLUDE_DIRS}
 )
 
-SET(DEPENDENCIES rclcpp)
+SET(DEPENDENCIES rclcpp sensor_msgs geometry_msgs cv_bridge tf2_eigen tf2_ros pcl_ros pcl_conversions)
 SET(LIBS ${OpenCV_LIBRARIES} ${EIGEN3_LIBRARIES} ${PCL_LIBRARIES})
 SET(SOURCES)
 

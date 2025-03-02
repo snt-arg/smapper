@@ -19,6 +19,7 @@ find_package(tf2_eigen REQUIRED)
 find_package(pcl_ros REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(message_filters REQUIRED)
+find_package(smapper_msgs REQUIRED)
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include/
@@ -37,9 +38,10 @@ SET(DEPENDENCIES
     pcl_ros 
     pcl_conversions 
     message_filters
+    smapper_msgs
 )
 SET(LIBS ${OpenCV_LIBRARIES} ${EIGEN3_LIBRARIES} ${PCL_LIBRARIES})
-SET(SOURCES src/camera_lidar_fusion/camera_lidar_fusion.cpp src/camera_lidar_fusion/camera_handler.cpp)
+SET(SOURCES src/camera_lidar_fusion/camera_lidar_fusion.cpp src/camera_lidar_fusion/camera_handler.cpp src/camera_lidar_fusion/sensors_synchronizer.cpp)
 
 add_executable(camera_lidar_fusion_node src/camera_lidar_fusion_node.cpp ${SOURCES})
 ament_target_dependencies(camera_lidar_fusion_node ${DEPENDENCIES})

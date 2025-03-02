@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <functional>
-#include <rclcpp/logging.hpp>
 
 #include "pcl_conversions/pcl_conversions.h"
 

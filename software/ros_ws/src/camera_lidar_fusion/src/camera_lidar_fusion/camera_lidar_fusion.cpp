@@ -2,41 +2,46 @@
 
 #include <chrono>
 #include <functional>
+#include <mutex>
+#include <rclcpp/logging.hpp>
 
+#include "camera_lidar_fusion/camera_handler.hpp"
 #include "pcl_conversions/pcl_conversions.h"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
 
 CameraLidarFusion::CameraLidarFusion()
-    : Node("camera_lidar_fusion"), pcl_frame_id_("os_lidar") {
+    : Node("camera_lidar_fusion"),
+      camera_buffers_(4),
+      camera_handlers_(4),
+      pcl_frame_id_("os_lidar") {
     rclcpp::QoS qos = rclcpp::QoS(100);
 
-    camera_handler_ = std::make_shared<CameraHandler>();
+    // camera_handler_ = std::make_shared<CameraHandler>();
+    std::vector<std::string> camera_names{
+        "/front_left", "/front_right", "/side_left", "/side_right"};
 
-    camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
-        "/front_right/camera_info",
-        qos,
-        std::bind(&CameraLidarFusion::camera_info_callback_, this, _1));
+    for (size_t i = 0; i < camera_handlers_.size(); i++) {
+        camera_handlers_[i] = std::make_shared<CameraHandler>();
+        std::string image_topic_name = camera_names[i] + "/camera_info";
+        auto callback = [this,
+                         i](const sensor_msgs::msg::CameraInfo::ConstSharedPtr &msg) {
+            this->camera_info_callback_(i, msg);
+        };
+
+        // Create the subscription
+        auto sub = this->create_subscription<sensor_msgs::msg::CameraInfo>(
+            image_topic_name, qos, callback);
+
+        camera_info_subs_.push_back(sub);
+    }
+
+    synced_sub = this->create_subscription<smapper_msgs::msg::SyncedData>(
+        "/synced/data", qos, std::bind(&CameraLidarFusion::synced_callback_, this, _1));
 
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
-
-    camera_sub_.subscribe(
-        this, "/camera/front_right/image_raw", qos.get_rmw_qos_profile());
-    lidar_sub_.subscribe(this, "/ouster/points", qos.get_rmw_qos_profile());
-
-    sync_ = std::make_shared<message_filters::Synchronizer<
-        message_filters::sync_policies::ApproximateTime<sensor_msgs::msg::PointCloud2,
-                                                        sensor_msgs::msg::Image>>>(
-        message_filters::sync_policies::ApproximateTime<sensor_msgs::msg::PointCloud2,
-                                                        sensor_msgs::msg::Image>(100),
-        lidar_sub_,
-        camera_sub_);
-
-    sync_->setAgePenalty(0.00005);
-    sync_->registerCallback(
-        std::bind(&CameraLidarFusion::synced_callback_, this, _1, _2));
 
     lidar_pub_ =
         this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud/colored", qos);
@@ -52,33 +57,36 @@ CameraLidarFusion::CameraLidarFusion()
 }
 
 void CameraLidarFusion::tf_timer_callback_() {
-    geometry_msgs::msg::TransformStamped lidar_camera_tf_msg;
-    bool got_camera_tf = get_tf_(lidar_camera_tf_msg);
-
-    if (!camera_handler_->transform_initialized() && got_camera_tf) {
-        RCLCPP_INFO(this->get_logger(),
-                    "Trying to obtain transform between camera and lidar");
-        Eigen::Matrix4d T_lidar_camera = transform_to_matrix_(lidar_camera_tf_msg);
-        camera_handler_->set_lidar_to_camera_matrix(T_lidar_camera);
-        camera_handler_->set_lidar_to_camera_inv_matrix(T_lidar_camera.inverse());
-        camera_handler_->set_lidar_to_camera_projection_matrix();
-        RCLCPP_INFO(this->get_logger(), "Initiating camera info");
+    for (auto &camera_handler : camera_handlers_) {
+        geometry_msgs::msg::TransformStamped lidar_camera_tf_msg;
+        bool got_camera_tf = get_tf_(camera_handler, lidar_camera_tf_msg);
+        if (!camera_handler->transform_initialized() && got_camera_tf) {
+            RCLCPP_INFO(this->get_logger(),
+                        "Trying to obtain transform between camera and lidar");
+            Eigen::Matrix4d T_lidar_camera = transform_to_matrix_(lidar_camera_tf_msg);
+            camera_handler->set_lidar_to_camera_matrix(T_lidar_camera);
+            camera_handler->set_lidar_to_camera_inv_matrix(T_lidar_camera.inverse());
+            camera_handler->set_lidar_to_camera_projection_matrix();
+            RCLCPP_INFO(this->get_logger(), "Initiating camera info");
+        }
     }
 }
 
 void CameraLidarFusion::camera_info_callback_(
+    int idx,
     const sensor_msgs::msg::CameraInfo::ConstSharedPtr &msg) {
-    if (!camera_handler_->got_camera_info()) {
+    if (!camera_handlers_[idx]->got_camera_info()) {
         RCLCPP_INFO(this->get_logger(), "Received Camera Info Message.");
-        camera_handler_->set_camera_info(msg);
+        camera_handlers_[idx]->set_camera_info(msg);
     }
 }
 
-bool CameraLidarFusion::get_tf_(geometry_msgs::msg::TransformStamped &out_tf_msg) {
+bool CameraLidarFusion::get_tf_(std::shared_ptr<CameraHandler> camera_handler,
+                                geometry_msgs::msg::TransformStamped &out_tf_msg) {
     try {
-        if (!camera_handler_->transform_initialized()) {
+        if (!camera_handler->transform_initialized()) {
             out_tf_msg =
-                tf_buffer_->lookupTransform(camera_handler_->get_camera_frame_id(),
+                tf_buffer_->lookupTransform(camera_handler->get_camera_frame_id(),
                                             pcl_frame_id_,
                                             tf2::TimePointZero);
             return true;
@@ -87,7 +95,7 @@ bool CameraLidarFusion::get_tf_(geometry_msgs::msg::TransformStamped &out_tf_msg
         RCLCPP_WARN(this->get_logger(),
                     "Could not transform %s to %s: %s",
                     pcl_frame_id_.c_str(),
-                    camera_handler_->get_camera_frame_id().c_str(),
+                    camera_handler->get_camera_frame_id().c_str(),
                     ex.what());
         return false;
     }
@@ -115,95 +123,95 @@ Eigen::Matrix4d CameraLidarFusion::transform_to_matrix_(
 }
 
 void CameraLidarFusion::synced_callback_(
-    const sensor_msgs::msg::PointCloud2::ConstSharedPtr &pcl_msg,
-    const sensor_msgs::msg::Image::ConstSharedPtr &image_msg) {
+    const smapper_msgs::msg::SyncedData::ConstSharedPtr msg) {
     // PCL
 
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZI>());
-    pcl::fromROSMsg(*pcl_msg, *cloud);
+    pcl::fromROSMsg(msg->cloud, *cloud);
 
-    lidar_buffer_.emplace_back(pcl_msg->header.stamp, cloud);
+    std::lock_guard<std::mutex> lock(lidar_buf_mutex_);
+    lidar_buffer_.emplace_back(msg->cloud.header.stamp, cloud);
 
     // Camera
+    for (size_t i = 0; i < msg->images.size(); i++) {
+        auto &camera_handler_ = camera_handlers_[i];
+        if (!camera_handler_->got_image_encoding()) {
+            camera_handler_->set_image_encoding(msg->images[i].encoding);
+        }
 
-    if (!camera_handler_->got_image_encoding()) {
-        camera_handler_->set_image_encoding(image_msg->encoding);
+        cv_bridge::CvImagePtr cv_ptr =
+            cv_bridge::toCvCopy(msg->images[i], camera_handler_->get_image_encoding());
+        camera_buffers_[i].emplace_back(msg->images[i].header.stamp, cv_ptr);
     }
-
-    cv_bridge::CvImagePtr cv_ptr =
-        cv_bridge::toCvCopy(image_msg, camera_handler_->get_image_encoding());
-    camera_buffer_.emplace_back(image_msg->header.stamp, cv_ptr);
 }
 
 void CameraLidarFusion::publish_process_pcl_() {
-    if (lidar_buffer_.empty() || camera_buffer_.empty()) {
+    std::lock_guard<std::mutex> lock(lidar_buf_mutex_);
+    if (lidar_buffer_.empty()) {
         // RCLCPP_INFO(this->get_logger(), "No Pointcloud/Image to be processed");
         return;
     }
 
-    if (lidar_buffer_.size() != camera_buffer_.size()) {
-        RCLCPP_ERROR(this->get_logger(),
-                     "Lidar and Camera buffer do not match in size");
-        return;
-    }
-    RCLCPP_INFO(this->get_logger(), "Pointcloud/Image to be processed");
-
     auto cloud = lidar_buffer_.front().second;
     auto cloud_stamp = lidar_buffer_.front().first;
-    auto cv_image = camera_buffer_.front().second->image;
 
+    sort_pointcloud_by_distance(cloud);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_colored(
         new pcl::PointCloud<pcl::PointXYZRGB>());
 
-    // create depth and pointindex buffer
-    std::vector<std::vector<float>> depth_buffer(
-        cv_image.rows,
-        std::vector<float>(cv_image.cols, std::numeric_limits<float>::max()));
+    for (size_t i = 0; i < camera_buffers_.size(); i++) {
+        if (camera_buffers_[i].empty()) continue;
+        auto cv_image = camera_buffers_[i].front().second->image;
 
-    std::vector<std::vector<int>> point_index_buffer(
-        cv_image.rows, std::vector<int>(cv_image.cols, -1));
+        // create depth and pointindex buffer
+        std::vector<std::vector<float>> depth_buffer(
+            cv_image.rows,
+            std::vector<float>(cv_image.cols, std::numeric_limits<float>::max()));
 
-    sort_pointcloud_by_distance(cloud);
+        std::vector<std::vector<int>> point_index_buffer(
+            cv_image.rows, std::vector<int>(cv_image.cols, -1));
 
-    int cloud_colored_index = 0;
-    // iterate through the points and color them
-    for (auto &point : cloud->points) {
-        if (!camera_handler_->transform_initialized()) break;
+        int cloud_colored_index = 0;
+        // iterate through the points and color them
+        for (auto &point : cloud->points) {
+            if (!camera_handlers_[i]->transform_initialized()) break;
 
-        if (std::isnan(point.x) || std::isnan(point.y) || std::isnan(point.z)) continue;
+            if (std::isnan(point.x) || std::isnan(point.y) || std::isnan(point.z))
+                continue;
 
-        Eigen::Vector4d point4d(point.x, point.y, point.z, 1);
-        std::vector<int> image_point = check_point_within_image_(point4d);
+            Eigen::Vector4d point4d(point.x, point.y, point.z, 1);
+            std::vector<int> image_point =
+                check_point_within_image_(camera_handlers_[i], point4d);
 
-        pcl::PointXYZRGB point_colored;
-        if (image_point.empty()) {
-            point_colored.r = point_colored.g = point_colored.b = 0;
-            // RCLCPP_INFO(this->get_logger(), "Could not get any Image Point");
-        } else if (!image_point.empty() && !cv_image.empty()) {
-            cv::Vec3b color =
-                cv_image.at<cv::Vec3b>(cv::Point(image_point[0], image_point[1]));
-            bool is_point_occluded = depth_cloud_filtering_(point4d,
-                                                            cloud_colored_index,
-                                                            image_point,
-                                                            depth_buffer,
-                                                            point_index_buffer,
-                                                            cloud_colored);
-            if (!is_point_occluded)
-                point_colored = color_cloud_(color);
-            else
+            pcl::PointXYZRGB point_colored;
+            if (image_point.empty()) {
                 point_colored.r = point_colored.g = point_colored.b = 0;
+                RCLCPP_INFO(this->get_logger(), "Could not get any Image Point");
+            } else if (!image_point.empty() && !cv_image.empty()) {
+                cv::Vec3b color =
+                    cv_image.at<cv::Vec3b>(cv::Point(image_point[0], image_point[1]));
+                bool is_point_occluded = depth_cloud_filtering_(point4d,
+                                                                cloud_colored_index,
+                                                                image_point,
+                                                                depth_buffer,
+                                                                point_index_buffer,
+                                                                cloud_colored);
+                if (!is_point_occluded)
+                    point_colored = color_cloud_(camera_handlers_[i], color);
+                // else
+                // point_colored.r = point_colored.g = point_colored.b = 0;
+            }
+            point_colored.x = point.x;
+            point_colored.y = point.y;
+            point_colored.z = point.z;
+            cloud_colored->points.push_back(point_colored);
+            cloud_colored_index = cloud_colored->points.size();
         }
-        point_colored.x = point.x;
-        point_colored.y = point.y;
-        point_colored.z = point.z;
-        cloud_colored->points.push_back(point_colored);
-        cloud_colored_index = cloud_colored->points.size();
+
+        camera_buffers_[i].pop_front();
     }
-
     publish_color_cloud(cloud_stamp, cloud_colored);
-
     lidar_buffer_.pop_front();
-    camera_buffer_.pop_front();
 }
 
 void CameraLidarFusion::sort_pointcloud_by_distance(
@@ -231,10 +239,11 @@ void CameraLidarFusion::sort_pointcloud_by_distance(
 }
 
 std::vector<int> CameraLidarFusion::check_point_within_image_(
+    std::shared_ptr<CameraHandler> camera_handler,
     const Eigen::Vector4d point4d) {
     std::vector<int> image_point;
     Eigen::Vector3d point3d_transformed_camera =
-        camera_handler_->get_lidar_to_camera_projection_matrix() * point4d;
+        camera_handler->get_lidar_to_camera_projection_matrix() * point4d;
 
     Eigen::Vector2d point2d_transformed_camera =
         Eigen::Vector2d(point3d_transformed_camera[0] / point3d_transformed_camera[2],
@@ -243,8 +252,8 @@ std::vector<int> CameraLidarFusion::check_point_within_image_(
     int x = static_cast<int>(std::round(point2d_transformed_camera[0]));
     int y = static_cast<int>(std::round(point2d_transformed_camera[1]));
 
-    if (x < 0 || x >= camera_handler_->get_image_width() || y < 0 ||
-        y >= camera_handler_->get_image_height() || point3d_transformed_camera[2] < 0) {
+    if (x < 0 || x >= camera_handler->get_image_width() || y < 0 ||
+        y >= camera_handler->get_image_height() || point3d_transformed_camera[2] < 0) {
         return image_point;
     } else {
         image_point.push_back(x);
@@ -282,13 +291,15 @@ bool CameraLidarFusion::depth_cloud_filtering_(
     return is_occluded;
 }
 
-pcl::PointXYZRGB CameraLidarFusion::color_cloud_(const cv::Vec3b color) {
+pcl::PointXYZRGB CameraLidarFusion::color_cloud_(
+    std::shared_ptr<CameraHandler> camera_handler,
+    const cv::Vec3b color) {
     pcl::PointXYZRGB point_colored;
-    if (camera_handler_->get_image_encoding() == "rgb8") {
+    if (camera_handler->get_image_encoding() == "rgb8") {
         point_colored.r = color[0];
         point_colored.g = color[1];
         point_colored.b = color[2];
-    } else if (camera_handler_->get_image_encoding() == "bgr8") {
+    } else if (camera_handler->get_image_encoding() == "bgr8") {
         point_colored.r = color[2];
         point_colored.g = color[1];
         point_colored.b = color[0];

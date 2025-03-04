@@ -85,7 +85,6 @@ void SensorsSynchronizer::pcl_callback(
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr& msg) {
     std::lock_guard<std::mutex> lock(buffer_mutex_);
     lidar_msgs_buffer_.push_back(msg);
-    RCLCPP_INFO(this->get_logger(), "Received PCL Cloud");
 }
 
 void SensorsSynchronizer::camera_image_callback(
@@ -108,91 +107,48 @@ void SensorsSynchronizer::camera_image_callback(
 
 void SensorsSynchronizer::sync_callback() {
     std::lock_guard<std::mutex> lock(buffer_mutex_);
-
-    // Step 1: Find synchronized camera images
-    std::vector<sensor_msgs::msg::Image::ConstSharedPtr> synced_images;
-    double synced_stamp;
-
-    if (!find_synced_cameras(synced_images, synced_stamp)) {
-        RCLCPP_ERROR(this->get_logger(), "Could not find synced cameras");
+    if (lidar_msgs_buffer_.empty()) {
+        // RCLCPP_WARN(this->get_logger(), "Did not receive any new lidar messages");
         return;
     }
-
-    // Step 2: Find matching lidar message
-    auto lidar_match = find_matching_lidar(synced_stamp);
-    if (!lidar_match) {
-        RCLCPP_ERROR(this->get_logger(), "Could not find mathching synced lidar");
-        return;
+    for (auto& buffer : cam_msgs_buffer_) {
+        if (buffer.empty()) {
+            // RCLCPP_WARN(this->get_logger(), "Did not receive any new camera
+            // messages");
+            lidar_msgs_buffer_.pop_front();
+            return;
+        }
     }
 
-    // Step 3: Publish synchronized data
-    publish_synced_data(lidar_match, synced_images);
+    auto& lidar_msg = lidar_msgs_buffer_.front();
+    auto synced_images = find_mathing_cameras(lidar_msg->header.stamp.nanosec);
 
-    // Step 4: Cleanup old messages
-    cleanup_buffers(synced_stamp);
+    publish_synced_data(lidar_msg, synced_images);
+
+    lidar_msgs_buffer_.pop_front();
 }
 
-bool SensorsSynchronizer::find_synced_cameras(
-    std::vector<sensor_msgs::msg::Image::ConstSharedPtr>& synced_images,
-    double& synced_stamp) {
-    // Implementation for camera synchronization
-    synced_images.clear();
+vector<sensor_msgs::msg::Image::ConstSharedPtr>
+SensorsSynchronizer::find_mathing_cameras(const double& stamp) {
+    vector<sensor_msgs::msg::Image::ConstSharedPtr> mathing_cameras;
 
-    // Check all cameras have data
-    for (const auto& buffer : cam_msgs_buffer_) {
-        if (buffer.empty()) return false;
-    }
+    if (cam_msgs_buffer_.empty()) return mathing_cameras;
 
-    // Find common time window
-    while (true) {
-        // Get front elements
-        std::vector<rclcpp::Time> stamps;
-        for (const auto& buffer : cam_msgs_buffer_) {
-            stamps.push_back(buffer.front()->header.stamp);
-        }
-
-        // Find time bounds
-        auto minmax = std::minmax_element(stamps.begin(), stamps.end());
-        double diff = (*minmax.second - *minmax.first).seconds();
-
-        if (diff <= sync_tolerance_) {
-            // Calculate average stamp
-            synced_stamp =
-                (minmax.first->nanoseconds() + minmax.second->nanoseconds()) * 0.5;
-            for (size_t i = 0; i < cam_msgs_buffer_.size(); ++i) {
-                synced_images.push_back(cam_msgs_buffer_[i].front());
+    for (auto& buffer : cam_msgs_buffer_) {
+        while (!buffer.empty()) {
+            auto& oldest = buffer.front();
+            double time_diff = fabs(oldest->header.stamp.nanosec - stamp) / 1e9;
+            if (time_diff <= age_penalty_) {
+                mathing_cameras.push_back(oldest);
+                buffer.pop_front();
+                break;
             }
-            return true;
-        } else {
-            // Remove oldest message from earliest camera
-            auto earliest = std::min_element(stamps.begin(), stamps.end());
-            size_t idx = std::distance(stamps.begin(), earliest);
-            cam_msgs_buffer_[idx].pop_front();
 
-            // Check if any buffer became empty
-            if (cam_msgs_buffer_[idx].empty()) return false;
-        }
-    }
-}
-
-sensor_msgs::msg::PointCloud2::ConstSharedPtr SensorsSynchronizer::find_matching_lidar(
-    const double& stamp) {
-    // Find best lidar match
-    double best_diff = age_penalty_;
-    auto best_match = lidar_msgs_buffer_.end();
-
-    for (auto it = lidar_msgs_buffer_.begin(); it != lidar_msgs_buffer_.end(); ++it) {
-        double diff = fabs(((*it)->header.stamp.nanosec - stamp)) / 1e9;
-        if (diff < best_diff) {
-            best_diff = diff;
-            best_match = it;
+            buffer.pop_front();
         }
     }
 
-    if (best_match != lidar_msgs_buffer_.end()) {
-        return *best_match;
-    }
-    return nullptr;
+    return mathing_cameras;
 }
 
 void SensorsSynchronizer::cleanup_buffers(const double& stamp) {

@@ -43,12 +43,8 @@ class SensorsSynchronizer : public rclcpp::Node {
 
     void pcl_callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& msg);
 
-    sensor_msgs::msg::PointCloud2::ConstSharedPtr find_matching_lidar(
+    vector<sensor_msgs::msg::Image::ConstSharedPtr> find_mathing_cameras(
         const double& stamp);
-
-    bool find_synced_cameras(
-        std::vector<sensor_msgs::msg::Image::ConstSharedPtr>& synced_images,
-        double& synced_stamp);
 
     void cleanup_buffers(const double& stamp);
 

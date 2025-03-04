@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
                                      "/camera/side_right"};
 
     auto synchronizer =
-        std::make_shared<SensorsSynchronizer>(100, "/ouster/points", camera_names);
+        std::make_shared<SensorsSynchronizer>(0.05, "/ouster/points", camera_names);
 
     executors.add_node(node);
     executors.add_node(synchronizer);

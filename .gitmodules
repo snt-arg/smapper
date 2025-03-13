@@ -10,3 +10,7 @@
 	path = software/smapper_app
 	url = git@github.com:snt-arg/smapper_app.git
 	branch = main
+[submodule "software/ros_ws/src/argus_camera_ros"]
+	path = software/ros_ws/src/argus_camera_ros
+	url = git@github.com:snt-arg/argus_camera_ros.git
+	branch = main

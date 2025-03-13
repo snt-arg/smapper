@@ -2,3 +2,11 @@
 	path = software/ros_ws/src/ouster-ros
 	url = https://github.com/ouster-lidar/ouster-ros.git
 	branch = ros2
+[submodule "software/smapper_api"]
+	path = software/smapper_api
+	url = git@github.com:snt-arg/smapper_api.git
+	branch = main
+[submodule "software/smapper_app"]
+	path = software/smapper_app
+	url = git@github.com:snt-arg/smapper_app.git
+	branch = main

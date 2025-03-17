@@ -3,7 +3,8 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /Global Options1
       Splitter Ratio: 0.5
     Tree Height: 544
   - Class: rviz_common/Selection
@@ -23,7 +24,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: Ouster
 Visualization Manager:
   Class: ""
   Displays:
@@ -119,12 +120,12 @@ Visualization Manager:
           Color: 255; 255; 255
           Color Transformer: Intensity
           Decay Time: 0
-          Enabled: false
+          Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 5684
+          Max Intensity: 5738
           Min Color: 0; 0; 0
-          Min Intensity: 5
+          Min Intensity: 6
           Name: Ouster
           Position Transformer: XYZ
           Selectable: true
@@ -140,7 +141,7 @@ Visualization Manager:
             Value: /ouster/points
           Use Fixed Frame: true
           Use rainbow: true
-          Value: false
+          Value: true
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
@@ -198,7 +199,7 @@ Visualization Manager:
           Value: true
         side_right_camera:
           Value: true
-      Marker Scale: 1
+      Marker Scale: 0.20000000298023224
       Name: TF
       Show Arrows: true
       Show Axes: true
@@ -222,7 +223,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: os_lidar
     Frame Rate: 30
   Name: root
   Tools:
@@ -265,25 +266,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.6155359745025635
+      Distance: 7.2857160568237305
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.30053234100341797
-        Y: -0.8227719664573669
-        Z: 0.23608146607875824
+        X: 1.0761913061141968
+        Y: 0.3006824553012848
+        Z: 0.920041024684906
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5997974872589111
+      Pitch: 0.684796929359436
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.630408763885498
+      Yaw: 5.6740593910217285
     Saved: ~
 Window Geometry:
   Displays:

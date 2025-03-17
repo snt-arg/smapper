@@ -1,25 +1,24 @@
 argus_camera_node:
     ros__parameters:
-      devices: [0, 1, 2, 3]
-      image_width: 640
-      image_height: 480
-      framerate: 30
-      sensor_mode: 2
-      buffer_size: 8
+        devices: [0, 1, 2, 3]
+        image_width: 640
+        image_height: 480
+        framerate: 30
+        sensor_mode: 2
+        buffer_size: 8
 
-      frame_ids: 
-        - front_left_camera
-        - front_right_camera
-        - side_right_camera
-        - side_left_camera
-      camera_names:
-        - "front_left"
-        - "front_right"
-        - "side_right"
-        - "side_left"
-      camera_urls:
-        - "package://smapper_bringup/config/cameras_info/front_left_info.yaml"
-        - "package://smapper_bringup/config/cameras_info/front_right_info.yaml"
-        - "package://smapper_bringup/config/cameras_info/side_right_info.yaml"
-        - "package://smapper_bringup/config/cameras_info/side_left_info.yaml"
-
+        frame_ids:
+            - front_left_camera
+            - front_right_camera
+            - side_left_camera
+            - side_right_camera
+        camera_names:
+            - "front_left"
+            - "front_right"
+            - "side_left"
+            - "side_right"
+        camera_urls:
+            - "package://smapper_bringup/config/cameras_info/front_left_info.yaml"
+            - "package://smapper_bringup/config/cameras_info/front_right_info.yaml"
+            - "package://smapper_bringup/config/cameras_info/side_right_info.yaml"
+            - "package://smapper_bringup/config/cameras_info/side_left_info.yaml"

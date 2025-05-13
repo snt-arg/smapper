@@ -1,0 +1,13 @@
+[Unit]
+Description=Web applicaion for SMapper
+After=network.target
+
+[Service]
+WorkingDirectory=/home/pedros/work/smapper/software/smapper_app/
+ExecStart=/bin/bash echo "TO BE DONE"
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=default.target
+

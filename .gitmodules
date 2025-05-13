@@ -14,3 +14,6 @@
 	path = software/ros_ws/src/argus_camera_ros
 	url = git@github.com:snt-arg/argus_camera_ros.git
 	branch = main
+[submodule "docs"]
+	path = docs
+	url = git@github.com:snt-arg/smapper_docs.git

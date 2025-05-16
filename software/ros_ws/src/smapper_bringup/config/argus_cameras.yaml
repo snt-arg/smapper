@@ -3,7 +3,7 @@ argus_camera_node:
         devices: [0, 1, 2, 3]
         image_width: 640
         image_height: 480
-        framerate: 30
+        framerate: 20
         sensor_mode: 2
         buffer_size: 8
 
@@ -18,7 +18,7 @@ argus_camera_node:
             - "side_left"
             - "side_right"
         camera_urls:
-            - "package://smapper_bringup/config/cameras_info/front_left_info.yaml"
-            - "package://smapper_bringup/config/cameras_info/front_right_info.yaml"
-            - "package://smapper_bringup/config/cameras_info/side_right_info.yaml"
-            - "package://smapper_bringup/config/cameras_info/side_left_info.yaml"
+            - "package://smapper_bringup/config/calib/front_left_info.yaml"
+            - "package://smapper_bringup/config/calib/front_right_info.yaml"
+            - "package://smapper_bringup/config/calib/side_left_info.yaml"
+            - "package://smapper_bringup/config/calib/side_right_info.yaml"

@@ -1,19 +1,31 @@
 procs:
-  Bringup:
-    shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch smapper_bringup bringup.launch.py"
-    autostart: false
-  Ouster:
-    shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch ouster_ros sensor.launch.xml sensor_hostname:=os-122436001165.local"
-    autostart: false
-  ArgusCameras:
-    shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch argus_camera_ros  argus_camera.launch.py"
-    autostart: false
-  RecordBag:
-    stop: 
-      send-keys: ["<C-c>"]
-    cmd:
-      - bag_record
-    autostart: false
-  Rviz:
-    shell: bash -c "source /opt/ros/humble/setup.bash && rviz2 -d $HOME/smapper/config/rviz/viz.rviz"
-    autostart: false
+    Bringup:
+        shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch smapper_bringup bringup.launch.py"
+        autostart: false
+        env:
+            RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+
+    Ouster:
+        shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch smapper_bringup lidar.launch.py"
+        autostart: false
+        env:
+            RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+    MOLA:
+        shell: bash -c "source /opt/ros/humble/setup.bash &&  ros2 launch mola_lidar_odometry ros2-lidar-odometry.launch.py lidar_topic_name:=ouster/points imu_topic_name:=/ouster/imu use_state_estimator:=True publish_localization_following_rep105:=False enforce_planar_motion:=True use_mola_gui:=False use_rviz:=False"
+        autostart: false
+        env:
+            RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+    ArgusCameras:
+        shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch smapper_bringup argus_cameras.launch.py"
+        autostart: false
+        env:
+            RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+    RecordBag:
+        stop:
+            send-keys: ["<C-c>"]
+        cmd:
+            - bag_record
+        autostart: false
+    Rviz:
+        shell: bash -c "source /opt/ros/humble/setup.bash && rviz2 -d $HOME/smapper/config/rviz/viz.rviz"
+        autostart: false

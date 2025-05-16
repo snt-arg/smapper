@@ -190,6 +190,11 @@ convert_ros2bags(){
 
 # ------------------------------------------------------------
 
+if [[ $# -le 3 ]]; then
+  log_error "Usage kalibr path_to_calib_dir path_to_ros2_bags [convert/calib]"
+  exit 1
+fi
+
 if [[ ! -d $CALIBRATION_DIR ]]; then
   log_info "Creating directory at $CALIBRATION_DIR"
   mkdir -p $CALIBRATION_DIR

@@ -18,7 +18,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive \
 
 
 # Create the workspace and build kalibr in it
-ENV WORKSPACE /catkin_ws
+ENV WORKSPACE=/catkin_ws
 
 RUN mkdir -p $WORKSPACE/src && \
 	cd $WORKSPACE && \
@@ -34,6 +34,10 @@ RUN	cd $WORKSPACE &&\
 	catkin build -j$(nproc)
 
 WORKDIR /catkin_ws
+
+RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc
+RUN echo "source /catkin_ws/devel/setup.bash" >> /root/.bashrc
+RUN echo "export KALIBR_MANUAL_FOCAL_LENGTH_INIT=1" >> /root/.bashrc
 
 RUN echo "#!/bin/bash" >> /entrypoint.sh \
     && echo "source /opt/ros/noetic/setup.bash" >> /entrypoint.sh \

@@ -1,0 +1,7 @@
+calibration_dir: ~/work/smapper/calibration/kalibr/ # Where calibration data metadata is. Will also be used to store generated calibrations
+rosbags_dir: ~/rosbags # Where rosbags bags are. This directory must have a ros2 directory where ros2 bags are stored
+smapper_dir: ~/work/smapper/ # Mainly used to get the custom Dockerfile for Kalibr
+april_tag_filename: april_6x6_80x80cm.yaml # Relative to calibration_dir
+imu_config_filename: static/imu/config.yaml
+kalibr_image_tag: kalibr
+parallel_jobs: 4

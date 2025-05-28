@@ -2,7 +2,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 import typer
 import os
 from calib_toolbox.config import Config
-from calib_toolbox.docker import DockerHelper
+from calib_toolbox.docker import DockerRunner
 from calib_toolbox.executor import execute_pool
 from calib_toolbox.logger import logger
 from calib_toolbox.calibration import (
@@ -75,8 +75,8 @@ def convert_ros2_bags(config: Config):
     execute_pool(cmds, "Converting ros2 bags", config.parallel_jobs)
 
 
-def prepare_kalibr_docker(config: Config) -> DockerHelper:
-    docker_helper = DockerHelper()
+def prepare_kalibr_docker(config: Config) -> DockerRunner:
+    docker_helper = DockerRunner()
     if not docker_helper.image_exists(config.kalibr_image_tag):
         logger.info("Kablir Docker image does not yet exist. Building it")
         with Progress(

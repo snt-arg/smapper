@@ -6,13 +6,13 @@ import subprocess
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from calib_toolbox.config import Config
-from calib_toolbox.docker import DockerHelper
-from calib_toolbox.executor import Commands, execute_pool
+from calib_toolbox.docker import DockerRunner
+from calib_toolbox.executor import execute_pool
 from calib_toolbox.logger import logger
 
 
 class CalibrationBase(ABC):
-    def __init__(self, config: Config, docker_helper: DockerHelper):
+    def __init__(self, config: Config, docker_helper: DockerRunner):
         self.config = config
         self.docker_helper = docker_helper
         self.docker_data_path = "/data"
@@ -24,11 +24,17 @@ class CalibrationBase(ABC):
 
 
 class CameraCalibration(CalibrationBase):
-    def run_single_calibration(self, bag_name: str, topics: List[str], rolling_shutter: bool = False):
+    def run_single_calibration(
+        self, bag_name: str, topics: List[str], rolling_shutter: bool = False
+    ):
         cmd = [
             "rosrun",
             "kalibr",
-            "kalibr_calibrate_rs_cameras" if rolling_shutter else "kalibr_calibrate_cameras",
+            (
+                "kalibr_calibrate_rs_cameras"
+                if rolling_shutter
+                else "kalibr_calibrate_cameras"
+            ),
             "--bag",
             f"/bags/{bag_name}",
             "--bag-freq",
@@ -54,7 +60,9 @@ class CameraCalibration(CalibrationBase):
         )
 
     def run(self):
-        logger.info("Running camera calibrations. Only rosbags with prefix calib are considered!")
+        logger.info(
+            "Running camera calibrations. Only rosbags with prefix calib are considered!"
+        )
         cmds = []
 
         for output in os.listdir(os.path.join(self.config.rosbags_dir, "ros1")):
@@ -80,7 +88,9 @@ class CameraCalibration(CalibrationBase):
             self.config.parallel_jobs,
         )
 
-        logger.info(f"Moving generated files into {os.path.join(self.config.calibration_dir, 'static')}")
+        logger.info(
+            f"Moving generated files into {os.path.join(self.config.calibration_dir, 'static')}"
+        )
         for output in os.listdir(os.path.join(self.config.rosbags_dir, "ros1")):
             file_extension = output.split(".")[-1]
             if "calib" not in output:
@@ -90,7 +100,9 @@ class CameraCalibration(CalibrationBase):
                 continue
 
             file = os.path.join(self.config.rosbags_dir, "ros1", output)
-            shutil.move(file, os.path.join(self.config.calibration_dir, "static", output))
+            shutil.move(
+                file, os.path.join(self.config.calibration_dir, "static", output)
+            )
 
 
 class IMUCalibration(CalibrationBase):
@@ -184,7 +196,12 @@ class IMUCalibration(CalibrationBase):
                 ros1_bags_dir = os.path.join(self.config.rosbags_dir, "ros1")
                 shutil.move(
                     f"{ros1_bags_dir}/temp/allan_variance.csv",
-                    os.path.join(self.config.calibration_dir, "static", "imu", "allan_variance.csv"),
+                    os.path.join(
+                        self.config.calibration_dir,
+                        "static",
+                        "imu",
+                        "allan_variance.csv",
+                    ),
                 )
 
             shutil.move(
@@ -231,23 +248,29 @@ class CameraIMUCalibration(CalibrationBase):
         )
 
     def run(self):
-        logger.info("Running camera-IMU calibrations. Only rosbags with prefix cam_imu are considered!")
+        logger.info(
+            "Running camera-IMU calibrations. Only rosbags with prefix cam_imu are considered!"
+        )
         cmds = []
 
         # Find camera calibration files
         camera_yamls = []
         imu_yaml = os.path.join("static", "imu", "imu.yaml")
-        
+
         for file in os.listdir(os.path.join(self.config.calibration_dir, "static")):
             if file.endswith(".yaml") and "calib" in file:
                 camera_yamls.append(os.path.join("static", file))
 
         if not camera_yamls:
-            logger.error("No camera calibration files found. Please run camera calibration first.")
+            logger.error(
+                "No camera calibration files found. Please run camera calibration first."
+            )
             return
 
         if not os.path.exists(os.path.join(self.config.calibration_dir, imu_yaml)):
-            logger.error("No IMU calibration file found. Please run IMU calibration first.")
+            logger.error(
+                "No IMU calibration file found. Please run IMU calibration first."
+            )
             return
 
         for output in os.listdir(os.path.join(self.config.rosbags_dir, "ros1")):
@@ -258,7 +281,9 @@ class CameraIMUCalibration(CalibrationBase):
                 cmds.append(self.run_single_calibration(output, camera_yaml, imu_yaml))
 
         if not cmds:
-            logger.warning("No camera-IMU calibration bags found. Bags should have prefix 'cam_imu'.")
+            logger.warning(
+                "No camera-IMU calibration bags found. Bags should have prefix 'cam_imu'."
+            )
             return
 
         execute_pool(
@@ -267,7 +292,9 @@ class CameraIMUCalibration(CalibrationBase):
             self.config.parallel_jobs,
         )
 
-        logger.info(f"Moving generated files into {os.path.join(self.config.calibration_dir, 'static')}")
+        logger.info(
+            f"Moving generated files into {os.path.join(self.config.calibration_dir, 'static')}"
+        )
         for output in os.listdir(os.path.join(self.config.rosbags_dir, "ros1")):
             file_extension = output.split(".")[-1]
             if "cam_imu" not in output:
@@ -277,4 +304,7 @@ class CameraIMUCalibration(CalibrationBase):
                 continue
 
             file = os.path.join(self.config.rosbags_dir, "ros1", output)
-            shutil.move(file, os.path.join(self.config.calibration_dir, "static", output)) 
+            shutil.move(
+                file, os.path.join(self.config.calibration_dir, "static", output)
+            )
+

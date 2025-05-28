@@ -1,11 +1,18 @@
 #Accelerometer
-accelerometer_noise_density: 0.005417814632885556 
-accelerometer_random_walk: 0.00026405437265548015 
+# accelerometer_noise_density: 0.005417814632885556
+# accelerometer_random_walk: 0.00026405437265548015
 
 #Gyroscope
-gyroscope_noise_density: 8.623255154741238e-05 
-gyroscope_random_walk: 5.5971879319209416e-06 
+# gyroscope_noise_density: 8.623255154741238e-05
+# gyroscope_random_walk: 5.5971879319209416e-06
 
-rostopic: '/ouster/imu' 
-update_rate: 100 
+# White noise (x5)
+accelerometer_noise_density: 0.02708907316
+gyroscope_noise_density: 0.00043116275
 
+# Walks (x10)
+accelerometer_random_walk: 0.00264054372
+gyroscope_random_walk: 0.00005597187
+
+rostopic: "/ouster/imu"
+update_rate: 100

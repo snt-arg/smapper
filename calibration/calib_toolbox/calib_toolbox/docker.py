@@ -9,9 +9,12 @@ from calib_toolbox.logger import logger
 
 client = docker.from_env()
 
+
 class DockerError(Exception):
     """Custom exception for Docker-related errors"""
+
     pass
+
 
 class DockerRunner:
     def __init__(self):
@@ -20,6 +23,11 @@ class DockerRunner:
         except Exception as e:
             raise DockerError(f"Failed to initialize Docker client: {str(e)}")
 
+        if not self._passthrough_xhost_to_docker():
+            logger.error(
+                "Failed to passthrough xhost to docker. GUI apps might not work"
+            )
+
     def image_exists(self, image_name: str) -> bool:
         try:
             self.client.images.get(image_name)
@@ -27,14 +35,16 @@ class DockerRunner:
         except ImageNotFound:
             return False
 
-    def build_image(self, tag: str, path: Union[str, Path], dockerfile: Union[str, Path]) -> None:
+    def build_image(
+        self, tag: str, path: Union[str, Path], dockerfile: Union[str, Path]
+    ) -> None:
         """Build a Docker image with better error handling and logging.
-        
+
         Args:
             tag: Image tag
             path: Build context path
             dockerfile: Path to Dockerfile
-            
+
         Raises:
             DockerError: If build fails
         """
@@ -44,7 +54,7 @@ class DockerRunner:
                 path=str(path),
                 dockerfile=str(dockerfile),
                 tag=tag,
-                rm=True  # Remove intermediate containers
+                rm=True,  # Remove intermediate containers
             )
         except BuildError as e:
             raise DockerError(f"Failed to build image {tag}: {str(e)}")
@@ -62,12 +72,12 @@ class DockerRunner:
             "environment": env_var or {},
             "volumes": {},
         }
-        
+
         if volumes:
             for volume in volumes:
                 src, dst = volume.split(":", 1)
                 config["volumes"][src] = {"bind": dst.split(":")[0], "mode": "rw"}
-                
+
         return config
 
     def run_container(
@@ -80,11 +90,12 @@ class DockerRunner:
         """Run a container with improved error handling"""
         try:
             config = self._prepare_container_config(env_var, volumes)
-            container = self.client.containers.run(
+            # NOTE: stdout/sterr of container could be saved to a logs folder
+            self.client.containers.run(
                 img_tag,
                 command,
                 **config,
-                detach=False  # Wait for container to complete
+                detach=False,  # Wait for container to complete
             )
             return True
         except Exception as e:
@@ -107,11 +118,13 @@ class DockerRunner:
                 command,
                 **config,
                 name=container_name,
-                detach=True  # Run in background
+                detach=True,  # Run in background
             )
             return container
         except Exception as e:
-            raise DockerError(f"Failed to create persistent container {container_name}: {str(e)}")
+            raise DockerError(
+                f"Failed to create persistent container {container_name}: {str(e)}"
+            )
 
     def cleanup_container(self, container_name: str) -> None:
         """Clean up a container by name with proper error handling"""
@@ -143,26 +156,6 @@ class DockerRunner:
 
         return cmd
 
-    def create_persistant_container(
-        self,
-        container_name: str,
-        img_tag: str,
-        command: List[str],
-        env_var: Optional[Dict[str, str]] = None,
-        volumes: Optional[List[str]] = None,
-    ):
-        cmd = ["docker", "run", "-dt", "--name", container_name]
-        if env_var:
-            for key, val in env_var.items():
-                cmd.extend(["-e", f"{key}={os.path.expandvars(val)}"])
-
-        if volumes:
-            for volume in volumes:
-                cmd.extend(["-v", volume])
-
-        cmd.append(img_tag)
-        cmd.extend(command)
-
-        ret = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
+    def _passthrough_xhost_to_docker(self) -> bool:
+        ret = subprocess.call(["xhost", "+local:docker"], stdout=subprocess.DEVNULL)
         return ret == 0

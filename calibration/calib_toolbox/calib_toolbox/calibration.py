@@ -6,17 +6,28 @@ import subprocess
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from calib_toolbox.config import Config
-from calib_toolbox.docker import DockerRunner
+from calib_toolbox.docker import DockerError, DockerRunner
 from calib_toolbox.executor import execute_pool
 from calib_toolbox.logger import logger
 
+# NOTE: Command for imu-camera calibration
+# rosrun kalibr kalibr_calibrate_imu_camera --bag /bags/calib02_side_left.bag \
+# --cams /data/static/calib02_side_left-camchain.yaml --imu /data/static/imu/imu.yaml \
+# --target /data/april_6x6_80x80cm.yaml --imu-models calibrated --reprojection-sigma 1.0
+
 
 class CalibrationBase(ABC):
-    def __init__(self, config: Config, docker_helper: DockerRunner):
+    def __init__(
+        self,
+        config: Config,
+        docker_helper: DockerRunner,
+        data_path: str,
+        bags_path: str,
+    ):
         self.config = config
         self.docker_helper = docker_helper
-        self.docker_data_path = "/data"
-        self.docker_bags_path = "/bags"
+        self.docker_data_path = data_path
+        self.docker_bags_path = bags_path
 
     @abstractmethod
     def run(self):
@@ -219,7 +230,7 @@ class IMUCalibration(CalibrationBase):
         os.removedirs(os.path.join(ros1_bags_dir, "temp"))
 
 
-class CameraIMUCalibration(CalibrationBase):
+class IMUCameraCalibration(CalibrationBase):
     def run_single_calibration(self, bag_name: str, camera_yaml: str, imu_yaml: str):
         cmd = [
             "rosrun",
@@ -308,3 +319,93 @@ class CameraIMUCalibration(CalibrationBase):
                 file, os.path.join(self.config.calibration_dir, "static", output)
             )
 
+
+class Calibrators:
+    def __init__(self, config: Config):
+        self.config = config
+        self.docker_runner = DockerRunner()
+        self.docker_data_path = "/data"
+        self.docker_bags_path = "/bags"
+
+        self.camera_calibrator = CameraCalibration(
+            self.config,
+            self.docker_runner,
+            self.docker_data_path,
+            self.docker_bags_path,
+        )
+        self.imu_calibrator = IMUCalibration(
+            self.config,
+            self.docker_runner,
+            self.docker_data_path,
+            self.docker_bags_path,
+        )
+        self.imu_camera_calibrator = IMUCameraCalibration(
+            self.config,
+            self.docker_runner,
+            self.docker_data_path,
+            self.docker_bags_path,
+        )
+
+    def setup(self) -> bool:
+        if not self._validate_dirs():
+            return False
+        if not self._prepare_kalibr_image():
+            return False
+        return True
+
+    def calibrate_cameras(self):
+        self.camera_calibrator.run()
+
+    def calibrate_imu(self):
+        self.imu_calibrator.run()
+
+    def calibrate_imu_camera(self):
+        self.imu_camera_calibrator.run()
+
+    def _prepare_kalibr_image(self) -> bool:
+        if self.docker_runner.image_exists(self.config.kalibr_image_tag):
+            logger.info(f"Kablir Docker image <{self.config.kalibr_image_tag}> found.")
+            return True
+
+        logger.info("Kablir Docker image does not yet exist. Building it")
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+        ) as progress:
+            progress.add_task(
+                description="Building docker image. (Patience)", total=None
+            )
+            try:
+                self.docker_runner.build_image(
+                    tag=self.config.kalibr_image_tag,
+                    path=self.config.smapper_dir,
+                    dockerfile=os.path.join(
+                        self.config.smapper_dir, "docker", "kalibr", "Dockerfile"
+                    ),
+                )
+            except DockerError as e:
+                logger.error("Failed to build kablir image")
+                return False
+
+            logger.info("Kablir Docker image has been created!")
+
+        return True
+
+    def _validate_dirs(self) -> bool:
+        calib_dir = self.config.calibration_dir
+        smapper_dir = self.config.smapper_dir
+        logger.info(f"Validating file contents of {calib_dir}")
+
+        # Check if april tag file exists
+        april_tag_path = os.path.join(calib_dir, self.config.april_tag_filename)
+        if not os.path.isfile(april_tag_path):
+            logger.error(f"April Tag config file {april_tag_path} does not exist")
+            return False
+
+        # Check if SMapper repository exists
+        if not os.path.isdir(smapper_dir):
+            logger.error(f"SMapper directory {smapper_dir} does not exist")
+            return False
+
+        return True

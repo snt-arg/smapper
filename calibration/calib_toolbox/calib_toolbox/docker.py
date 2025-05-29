@@ -66,19 +66,54 @@ class DockerRunner:
         env_var: Optional[Dict[str, str]] = None,
         volumes: Optional[List[str]] = None,
     ) -> Dict:
-        """Helper method to prepare container configuration"""
+        """Helper method to prepare container configuration.
+
+        Args:
+            env_var: Dictionary of environment variables to pass to container
+            volumes: List of volume mount strings in format "src:dst"
+
+        Returns:
+            Dict containing the container configuration with expanded paths
+        """
         config = {
             "remove": True,  # Auto-remove container when it exits
-            "environment": env_var or {},
-            "volumes": {},
+            "environment": self._expand_environment_vars(env_var or {}),
+            "volumes": self._prepare_volumes(volumes or []),
         }
-
-        if volumes:
-            for volume in volumes:
-                src, dst = volume.split(":", 1)
-                config["volumes"][src] = {"bind": dst.split(":")[0], "mode": "rw"}
-
         return config
+
+    def _expand_environment_vars(self, env_vars: Dict[str, str]) -> Dict[str, str]:
+        """Expands environment variables in both keys and values.
+
+        Args:
+            env_vars: Dictionary of environment variables
+
+        Returns:
+            Dictionary with expanded environment variables
+        """
+        expanded = {}
+        for key, value in env_vars.items():
+            expanded_key = os.path.expandvars(str(key)) if key else key
+            expanded_value = os.path.expandvars(str(value)) if value else value
+            expanded[expanded_key] = expanded_value
+        return expanded
+
+    def _prepare_volumes(self, volumes: List[str]) -> Dict[str, Dict[str, str]]:
+        """Prepares volume mounts with expanded paths.
+
+        Args:
+            volumes: List of volume strings in "src:dst" format
+
+        Returns:
+            Dictionary of volume mount configurations
+        """
+        volume_config = {}
+        for volume in volumes:
+            src, dst = volume.split(":", 1)
+            src = os.path.expandvars(src)
+            dst = os.path.expandvars(dst.split(":")[0])
+            volume_config[src] = {"bind": dst, "mode": "rw"}
+        return volume_config
 
     def run_container(
         self,
@@ -118,7 +153,8 @@ class DockerRunner:
                 command,
                 **config,
                 name=container_name,
-                detach=True,  # Run in background
+                detach=True,
+                tty=True,
             )
             return container
         except Exception as e:
@@ -126,12 +162,22 @@ class DockerRunner:
                 f"Failed to create persistent container {container_name}: {str(e)}"
             )
 
-    def cleanup_container(self, container_name: str) -> None:
+    def cleanup_container(
+        self,
+        container_obj: Optional[Container] = None,
+        container_name: Optional[str] = None,
+    ) -> None:
         """Clean up a container by name with proper error handling"""
-        try:
+
+        if container_obj is None:
+            assert container_name, "A container object or name must be passed"
             container = self.client.containers.get(container_name)
+        else:
+            container = container_obj
+
+        try:
             container.stop()
-            container.remove()
+            # container.remove()
         except Exception as e:
             logger.warning(f"Failed to cleanup container {container_name}: {str(e)}")
 
@@ -155,6 +201,30 @@ class DockerRunner:
         cmd.extend(command)
 
         return cmd
+
+    def create_persistent_container_subprocess(
+        self,
+        container_name: str,
+        img_tag: str,
+        command: List[str],
+        env_var: Optional[Dict[str, str]] = None,
+        volumes: Optional[List[str]] = None,
+    ):
+        cmd = ["docker", "run", "-dt", "--name", container_name]
+        if env_var:
+            for key, val in env_var.items():
+                cmd.extend(["-e", f"{key}={os.path.expandvars(val)}"])
+
+        if volumes:
+            for volume in volumes:
+                cmd.extend(["-v", volume])
+
+        cmd.append(img_tag)
+        cmd.extend(command)
+
+        ret = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        return ret == 0
 
     def _passthrough_xhost_to_docker(self) -> bool:
         ret = subprocess.call(["xhost", "+local:docker"], stdout=subprocess.DEVNULL)

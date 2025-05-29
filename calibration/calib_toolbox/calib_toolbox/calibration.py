@@ -17,6 +17,21 @@ from calib_toolbox.logger import logger
 
 
 class CalibrationBase(ABC):
+    """Base class for all calibration procedures.
+    
+    This abstract class defines the interface for calibration procedures
+    and provides common functionality used by all calibration types.
+    
+    Args:
+        config: Configuration settings for the calibration.
+        docker_helper: Helper class for Docker operations.
+        
+    Attributes:
+        config: Configuration settings for the calibration.
+        docker_helper: Helper class for Docker operations.
+        docker_data_path: Mount path for data inside Docker container.
+        docker_bags_path: Mount path for ROS bags inside Docker container.
+    """
     def __init__(
         self,
         config: Config,
@@ -31,13 +46,35 @@ class CalibrationBase(ABC):
 
     @abstractmethod
     def run(self):
+        """Executes the calibration procedure.
+        
+        This method must be implemented by concrete calibration classes
+        to perform their specific calibration procedure.
+        """
         pass
 
 
 class CameraCalibration(CalibrationBase):
+    """Handles camera calibration using Kalibr.
+    
+    This class implements camera calibration for one or more cameras
+    using the Kalibr toolbox. It processes ROS bags with camera data
+    and generates calibration files.
+    """
+    
     def run_single_calibration(
         self, bag_name: str, topics: List[str], rolling_shutter: bool = False
     ):
+        """Runs calibration for a single camera.
+        
+        Args:
+            bag_name: Name of the ROS bag file containing camera data.
+            topics: List of ROS topics containing camera images.
+            rolling_shutter: Whether to use rolling shutter calibration.
+            
+        Returns:
+            list: Docker command to run the calibration.
+        """
         cmd = [
             "rosrun",
             "kalibr",
@@ -71,6 +108,12 @@ class CameraCalibration(CalibrationBase):
         )
 
     def run(self):
+        """Runs the camera calibration process.
+        
+        Processes all ROS bags with prefix 'calib_' and generates
+        calibration files for each camera. The results are stored
+        in the static directory within calibration_dir.
+        """
         logger.info(
             "Running camera calibrations. Only rosbags with prefix calib are considered!"
         )
@@ -117,16 +160,29 @@ class CameraCalibration(CalibrationBase):
 
 
 class IMUCalibration(CalibrationBase):
+    """Handles IMU calibration using Allan Variance analysis.
+    
+    This class implements IMU calibration using the Allan Variance
+    method. It processes ROS bags with IMU data and generates
+    calibration parameters.
+    """
+    
     def _cleanup_container(self):
+        """Cleans up the temporary Docker container used for IMU calibration."""
         logger.info("Cleaning up temporary container")
-        cmd3 = ["docker", "stop", "kalibr"]
-        cmd4 = ["docker", "rm", "kalibr"]
-        subprocess.call(cmd3, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.call(cmd4, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.docker_helper.cleanup_container(container_name="kalibr")
 
     def run_single_calibration(self):
+        """Runs calibration for a single IMU.
+        
+        This method performs Allan Variance analysis on IMU data
+        and generates calibration parameters.
+        
+        Returns:
+            bool: True if calibration was successful, False otherwise.
+        """
         logger.info("Creating temporary persistant container for roscore")
-        self.docker_helper.create_persistant_container(
+        self.docker_helper.create_persistent_container(
             "kalibr",
             "kalibr",
             ["roscore"],
@@ -191,6 +247,12 @@ class IMUCalibration(CalibrationBase):
         return True
 
     def run(self):
+        """Runs the IMU calibration process.
+        
+        Processes all ROS bags with prefix 'imu_' and generates
+        calibration parameters using Allan Variance analysis.
+        The results are stored in the static/imu directory.
+        """
         ros1_bags_dir = os.path.join(self.config.rosbags_dir, "ros1")
         os.makedirs(os.path.join(ros1_bags_dir, "temp"), exist_ok=True)
 
@@ -231,7 +293,24 @@ class IMUCalibration(CalibrationBase):
 
 
 class IMUCameraCalibration(CalibrationBase):
+    """Handles camera-IMU calibration using Kalibr.
+    
+    This class implements the calibration of the transformation
+    between cameras and IMU using the Kalibr toolbox. It requires
+    both camera and IMU calibration to be completed first.
+    """
+    
     def run_single_calibration(self, bag_name: str, camera_yaml: str, imu_yaml: str):
+        """Runs calibration for a single camera-IMU pair.
+        
+        Args:
+            bag_name: Name of the ROS bag file containing synchronized data.
+            camera_yaml: Path to the camera calibration YAML file.
+            imu_yaml: Path to the IMU calibration YAML file.
+            
+        Returns:
+            list: Docker command to run the calibration.
+        """
         cmd = [
             "rosrun",
             "kalibr",
@@ -259,6 +338,13 @@ class IMUCameraCalibration(CalibrationBase):
         )
 
     def run(self):
+        """Runs the camera-IMU calibration process.
+        
+        Processes all ROS bags with prefix 'cam_imu_' and generates
+        calibration files for each camera-IMU pair. Requires both
+        camera and IMU calibration files to exist. The results are
+        stored in the static directory.
+        """
         logger.info(
             "Running camera-IMU calibrations. Only rosbags with prefix cam_imu are considered!"
         )

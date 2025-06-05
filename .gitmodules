@@ -18,3 +18,7 @@
 	path = docs
 	url = git@github.com:snt-arg/smapper_docs.git
 	branch = main
+[submodule "software/smapper_toolbox"]
+	path = software/smapper_toolbox
+	url = git@github.com:snt-arg/smapper_toolbox.git
+	branch = main

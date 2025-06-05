@@ -12,7 +12,7 @@ from rich.progress import (
     TaskProgressColumn,
     SpinnerColumn,
 )
-from calib_toolbox.logger import logger
+from smapper_toolbox.logger import logger
 
 
 class JobStatus(Enum):

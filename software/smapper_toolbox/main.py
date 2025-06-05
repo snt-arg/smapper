@@ -1,8 +1,12 @@
 import typer
-from calib_toolbox.config import Config
-from calib_toolbox.logger import logger
-from calib_toolbox.calibration import Calibrators
-from calib_toolbox.rosbags import RosbagsConverter
+from smapper_toolbox.config import Config
+from smapper_toolbox.logger import logger
+from smapper_toolbox.calibration import Calibrators
+from smapper_toolbox.rosbags import (
+    RosbagsConverter,
+    read_ros2bag_metadata,
+    read_ros2bag_topics,
+)
 
 
 def main(
@@ -41,6 +45,8 @@ def main(
         exit(1)
 
     calibrators.setup()
+
+    read_ros2bag_topics("/home/pedros/rosbags/ros2/calib02_front_left/")
 
     if camera_calib:
         calibrators.calibrate_cameras()

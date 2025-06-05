@@ -5,7 +5,7 @@ import docker
 import subprocess
 from docker.errors import ImageNotFound, BuildError, APIError
 from docker.models.containers import Container
-from calib_toolbox.logger import logger
+from smapper_toolbox.logger import logger
 
 client = docker.from_env()
 

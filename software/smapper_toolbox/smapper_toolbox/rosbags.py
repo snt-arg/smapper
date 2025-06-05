@@ -3,8 +3,8 @@ from pydantic import BaseModel
 import yaml
 from typing import Any, Dict, List, Optional
 
-from calib_toolbox.executor import JobPool
-from calib_toolbox.logger import logger
+from smapper_toolbox.executor import JobPool
+from smapper_toolbox.logger import logger
 
 
 class RosbagsConverter:

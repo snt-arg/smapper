@@ -10,7 +10,7 @@ multicamera_node:
         camera_settings:
             mode: 2
             fps: 30
-            resolution: [1024, 768] # [640, 480]
+            resolution: [640, 480] #[1024, 768] 
             exposure: [480000, 4000000]
             gain: [1, 16]
             ae_lock: false

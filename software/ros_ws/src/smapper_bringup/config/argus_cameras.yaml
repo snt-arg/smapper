@@ -1,24 +1,29 @@
-argus_camera_node:
+multicamera_node:
     ros__parameters:
-        devices: [0, 1, 2, 3]
-        image_width: 640
-        image_height: 480
-        framerate: 20
-        sensor_mode: 2
-        buffer_size: 8
+        # timestamp_mode is used to decide which timestamp each camera frame has when published.
+        # The available modes are:
+        #   - TIME_FROM_TSC: Time from Tegra Wide timestamp (TSC) will be used, which translates to SOF TS.
+        #   - TIME_FROM_PTP: Time from PTP which is syncronized with TSC
+        #   - TIME_FROM_ROS: This used ROS time. Whenever a frame is published, this will
+        #     be stamped before being published with ROS time.
+        timestamp_mode: TIME_FROM_ROS 
+        camera_settings:
+            mode: 2
+            fps: 30
+            resolution: [1024, 768] # [640, 480]
+            exposure: [480000, 4000000]
+            gain: [1, 16]
+            ae_lock: false
+            awb_lock: true
+            print_modes: false 
 
-        frame_ids:
-            - front_left_camera
-            - front_right_camera
-            - side_left_camera
-            - side_right_camera
         camera_names:
             - "front_left"
             - "front_right"
             - "side_left"
             - "side_right"
         camera_urls:
-            - "package://smapper_bringup/config/calib/front_left_info.yaml"
-            - "package://smapper_bringup/config/calib/front_right_info.yaml"
-            - "package://smapper_bringup/config/calib/side_left_info.yaml"
-            - "package://smapper_bringup/config/calib/side_right_info.yaml"
+            - "package://argus_camera_ros/config/calib/front_left_info.yaml"
+            - "package://argus_camera_ros/config/calib/front_right_info.yaml"
+            - "package://argus_camera_ros/config/calib/side_left_info.yaml"
+            - "package://argus_camera_ros/config/calib/side_right_info.yaml"

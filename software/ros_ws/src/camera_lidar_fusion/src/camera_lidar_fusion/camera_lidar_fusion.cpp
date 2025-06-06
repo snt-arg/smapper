@@ -16,7 +16,7 @@ CameraLidarFusion::CameraLidarFusion()
     camera_handler_ = std::make_shared<CameraHandler>();
 
     camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
-        "/front_right/camera_info",
+        "/camera/front_right/camera_info",
         qos,
         std::bind(&CameraLidarFusion::camera_info_callback_, this, _1));
 

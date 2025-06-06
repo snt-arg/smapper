@@ -3,22 +3,26 @@ procs:
         shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch smapper_bringup bringup.launch.py"
         autostart: false
         env:
+            CYCLONEDDS_URI: file:///home/smapper/cyclonedds.xml
             RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
 
     Ouster:
         shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch smapper_bringup lidar.launch.py"
         autostart: false
         env:
+            CYCLONEDDS_URI: file:///home/smapper/cyclonedds.xml
             RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
     MOLA:
-        shell: bash -c "source /opt/ros/humble/setup.bash &&  ros2 launch mola_lidar_odometry ros2-lidar-odometry.launch.py lidar_topic_name:=ouster/points imu_topic_name:=/ouster/imu use_state_estimator:=True publish_localization_following_rep105:=False enforce_planar_motion:=True use_mola_gui:=False use_rviz:=False"
+        shell: bash -c "source /opt/ros/humble/setup.bash &&  ros2 launch mola_lidar_odometry ros2-lidar-odometry.launch.py lidar_topic_name:=ouster/points imu_topic_name:=/ouster/imu use_state_estimator:=True publish_localization_following_rep105:=False enforce_planar_motion:=True use_mola_gui:=False use_rviz:=False mola_lo_reference_frame:=odom mola_state_estimator_reference_frame:=odom"
         autostart: false
         env:
+            CYCLONEDDS_URI: file:///home/smapper/cyclonedds.xml
             RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
     ArgusCameras:
         shell: bash -c "source /opt/ros/humble/setup.bash && source $HOME/smapper/software/ros_ws/install/setup.bash && ros2 launch smapper_bringup argus_cameras.launch.py"
         autostart: false
         env:
+            CYCLONEDDS_URI: file:///home/smapper/cyclonedds.xml
             RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
     RecordBag:
         stop:
@@ -26,6 +30,19 @@ procs:
         cmd:
             - bag_record
         autostart: false
+        env:
+            CYCLONEDDS_URI: file:///home/smapper/cyclonedds.xml
+            RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
     Rviz:
         shell: bash -c "source /opt/ros/humble/setup.bash && rviz2 -d $HOME/smapper/config/rviz/viz.rviz"
         autostart: false
+        env:
+            CYCLONEDDS_URI: file:///home/smapper/cyclonedds.xml
+            RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+
+    Rosboard:
+        shell: bash -c "source /opt/ros/humble/setup.bash && cd $HOME/smapper/software/ros_ws/src/rosboard/ && ./run"
+        autostart: true
+        env:
+            CYCLONEDDS_URI: file:///home/smapper/cyclonedds.xml
+            RMW_IMPLEMENTATION: rmw_cyclonedds_cpp

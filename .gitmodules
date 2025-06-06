@@ -17,6 +17,8 @@
 [submodule "docs"]
 	path = docs
 	url = git@github.com:snt-arg/smapper_docs.git
-[submodule "software/ros_ws/src/mola_lidar_odometry"]
-	path = software/ros_ws/src/mola_lidar_odometry
-	url = https://github.com/MOLAorg/mola_lidar_odometry.git
+	branch = main
+[submodule "software/smapper_toolbox"]
+	path = software/smapper_toolbox
+	url = git@github.com:snt-arg/smapper_toolbox.git
+	branch = main

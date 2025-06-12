@@ -25,3 +25,6 @@
 [submodule "software/ros_ws/src/mola_lidar_odometry"]
 	path = software/ros_ws/src/mola_lidar_odometry
 	url = https://github.com/MOLAorg/mola_lidar_odometry.git
+[submodule "software/ros_ws/src/rosboard"]
+	path = software/ros_ws/src/rosboard
+	url = git@github.com:dheera/rosboard.git

@@ -28,3 +28,6 @@
 [submodule "software/ros_ws/src/realsense-ros"]
 	path = software/ros_ws/src/realsense-ros
 	url = https://github.com/IntelRealSense/realsense-ros.git
+[submodule "software/ros_ws/src/rosboard"]
+	path = software/ros_ws/src/rosboard
+	url = git@github.com:dheera/rosboard.git

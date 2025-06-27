@@ -14,16 +14,16 @@ multicamera_node:
             exposure: [480000, 4000000]
             gain: [1, 16]
             ae_lock: false
-            awb_lock: true
-            print_modes: false 
+            awb_lock: false
+            print_modes: false
 
         camera_names:
-            - "front_left"
             - "front_right"
-            - "side_left"
             - "side_right"
+            - "front_left"
+            - "side_left"
         camera_urls:
-            - "package://argus_camera_ros/config/calib/front_left_info.yaml"
             - "package://argus_camera_ros/config/calib/front_right_info.yaml"
-            - "package://argus_camera_ros/config/calib/side_left_info.yaml"
             - "package://argus_camera_ros/config/calib/side_right_info.yaml"
+            - "package://argus_camera_ros/config/calib/front_left_info.yaml"
+            - "package://argus_camera_ros/config/calib/side_left_info.yaml"

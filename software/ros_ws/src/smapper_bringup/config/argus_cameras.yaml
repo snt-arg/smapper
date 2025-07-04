@@ -15,7 +15,7 @@ multicamera_node:
             gain: [1, 16]
             ae_lock: false
             awb_lock: false
-            print_modes: false
+            print_modes: true
 
         camera_names:
             - "front_right"
@@ -23,7 +23,7 @@ multicamera_node:
             - "front_left"
             - "side_left"
         camera_urls:
-            - "package://argus_camera_ros/config/calib/front_right_info.yaml"
-            - "package://argus_camera_ros/config/calib/side_right_info.yaml"
-            - "package://argus_camera_ros/config/calib/front_left_info.yaml"
-            - "package://argus_camera_ros/config/calib/side_left_info.yaml"
+            - "package://smapper_bringup/config/calib/front_right_info.yaml"
+            - "package://smapper_bringup/config/calib/side_right_info.yaml"
+            - "package://smapper_bringup/config/calib/front_left_info.yaml"
+            - "package://smapper_bringup/config/calib/side_left_info.yaml"

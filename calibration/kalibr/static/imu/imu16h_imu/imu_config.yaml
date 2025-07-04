@@ -1,0 +1,4 @@
+imu_rate: 100
+imu_topic: /ouster/imu
+measure_rate: 100
+sequence_time: 58204

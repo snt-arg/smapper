@@ -1,0 +1,4 @@
+imu_rate: 400
+imu_topic: /camera/realsense/imu
+measure_rate: 400
+sequence_time: 72890

@@ -1,0 +1,11 @@
+#Accelerometer
+accelerometer_noise_density: 0.004001346705535428 
+accelerometer_random_walk: 0.0001224627431466927 
+
+#Gyroscope
+gyroscope_noise_density: 8.52289503382261e-05 
+gyroscope_random_walk: 2.14534407581717e-06 
+
+rostopic: '/ouster/imu' 
+update_rate: 100 
+

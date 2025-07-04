@@ -1,0 +1,42 @@
+imu0:
+  T_i_b:
+  - [1.0, 0.0, 0.0, 0.0]
+  - [0.0, 1.0, 0.0, 0.0]
+  - [0.0, 0.0, 1.0, 0.0]
+  - [0.0, 0.0, 0.0, 1.0]
+  accelerometer_noise_density: 0.027089073164427782
+  accelerometer_random_walk: 0.0026405437265548015
+  gyroscope_noise_density: 0.0004311627577370619
+  gyroscope_random_walk: 5.5971879319209416e-05
+  model: calibrated
+  rostopic: /ouster/imu
+  time_offset: 0.0
+  update_rate: 100
+imu1:
+  T_i_b:
+  - [0.9999999965623435, -1.1688575407452016e-05, -8.208952679035471e-05, 9.407886870048469e-05]
+  - [1.1695662746691164e-05, 0.9999999962045881, 8.633675541257643e-05, -5.7086249785065626e-05]
+  - [8.208851732511507e-05, -8.633771520720068e-05, 0.9999999929036372, -0.0009693495661913725]
+  - [0.0, 0.0, 0.0, 1.0]
+  accelerometer_noise_density: 0.02000673352767714
+  accelerometer_random_walk: 0.001224627431466927
+  gyroscope_noise_density: 0.0004261447516911305
+  gyroscope_random_walk: 2.14534407581717e-05
+  model: calibrated
+  rostopic: /ouster/imu
+  time_offset: 0.0
+  update_rate: 100
+imu2:
+  T_i_b:
+  - [-0.0034543337462070722, -0.9999482638853093, 0.009567503913022801, 0.021461369130064127]
+  - [-0.018747279398360406, -0.009501122735462664, -0.9997791096946993, -0.07658956909877263]
+  - [0.9998182870369645, -0.0036329353863736036, -0.01871348943807133, -0.05397303732445568]
+  - [0.0, 0.0, 0.0, 1.0]
+  accelerometer_noise_density: 0.005119536556707974
+  accelerometer_random_walk: 0.0007446449364276494
+  gyroscope_noise_density: 0.0010273469802412588
+  gyroscope_random_walk: 3.8743601798420855e-05
+  model: calibrated
+  rostopic: /camera/realsense/imu
+  time_offset: 0.0
+  update_rate: 400

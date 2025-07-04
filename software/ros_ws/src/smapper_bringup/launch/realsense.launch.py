@@ -24,28 +24,7 @@ def launch_realsense(ld: LaunchDescription) -> None:
                 "config_file": config_file,
                 "json_file_path": preset_file,
                 "camera_name": "realsense",
-                "rgb_camera.color_profile": "640x480x30"
             }.items(),
-        )
-    )
-
-def publish_tfs(ld: LaunchDescription) -> None:
-    ld.add_action(
-        Node(
-            package="tf2_ros",
-            executable="static_transform_publisher",
-            name="static_transform_publisher_imu_to_camera",
-            arguments=[
-                "--x", "0.0772",
-                "--y", "0.0175",
-                "--z", "0.030",
-                "--qx", "0.0",
-                "--qy", "0.0",
-                "--qz", "0.0",
-                "--qw", "1.0",
-                "--frame-id", "os_imu",
-                "--child-frame-id", "front_right",
-            ],
         )
     )
 

@@ -1,12 +1,11 @@
 enable_color: true
 rgb_camera:
-    color_profile: 1280x720x30
-    enable_auto_exposure: true
+    color_profile: 640x480x30
 
 enable_depth: true
 depth_module:
-    depth_profile: 848x480x30
-    infra_profile: 848x480x30
+    depth_profile: 640x480x30
+    infra_profile: 640x480x30
 
 align_depth.enable: true
 

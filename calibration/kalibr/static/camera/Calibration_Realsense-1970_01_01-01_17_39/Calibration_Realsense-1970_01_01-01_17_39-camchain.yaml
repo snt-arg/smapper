@@ -1,0 +1,8 @@
+cam0:
+  cam_overlaps: []
+  camera_model: pinhole
+  distortion_coeffs: [0.09664591489773028, -0.17898409622328165, 0.0018507932894134427, 0.0021781167451163197]
+  distortion_model: radtan
+  intrinsics: [601.3186411971056, 601.2768853467267, 333.27919850528497, 255.8812824984572]
+  resolution: [640, 480]
+  rostopic: /camera/realsense/color/image_raw

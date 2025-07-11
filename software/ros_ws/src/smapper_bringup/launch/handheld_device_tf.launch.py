@@ -50,8 +50,8 @@ def generate_launch_description():
             package='tf2_ros',
             executable='static_transform_publisher',
             name='base_link_to_front_left_publisher',
-            arguments=['0.056048', '0.072026', '0.084395', 
-                      '0.616745', '-0.358952', '0.351072', '-0.606241',
+            arguments=['0.060816', '0.063762', '0.084513', 
+                      '0.616467', '-0.357533', '0.351321', '-0.607217',
                       'base_link', 'front_left']
         ),
         
@@ -60,8 +60,8 @@ def generate_launch_description():
             package='tf2_ros',
             executable='static_transform_publisher',
             name='base_link_to_front_right_publisher',
-            arguments=['0.054858', '-0.064176', '0.097704', 
-                      '-0.354920', '0.613745', '-0.612725', '0.349167',
+            arguments=['0.056637', '-0.063162', '0.084593', 
+                      '0.354204', '-0.612500', '0.613581', '-0.350573',
                       'base_link', 'front_right']
         ),
         
@@ -70,8 +70,8 @@ def generate_launch_description():
             package='tf2_ros',
             executable='static_transform_publisher',
             name='base_link_to_side_left_publisher',
-            arguments=['-0.066201', '0.063729', '0.084978', 
-                      '0.711349', '-0.003384', '-0.007293', '-0.702793',
+            arguments=['-0.060487', '0.087803', '0.080459', 
+                      '0.711228', '-0.001269', '-0.005826', '-0.702936',
                       'base_link', 'side_left']
         ),
         
@@ -80,19 +80,9 @@ def generate_launch_description():
             package='tf2_ros',
             executable='static_transform_publisher',
             name='base_link_to_side_right_publisher',
-            arguments=['-0.067236', '-0.070069', '0.097891', 
-                      '0.004504', '-0.704462', '0.709709', '0.005144',
+            arguments=['-0.064485', '-0.077166', '0.078651', 
+                      '0.001199', '-0.705124', '0.709054', '0.006368',
                       'base_link', 'side_right']
-        ),
-        
-        # realsense_link to realsense_imu
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='realsense_link_to_realsense_imu_publisher',
-            arguments=['-0.054549', '-0.109006', '0.035265', 
-                      '0.506319', '-0.501459', '0.499713', '0.492409',
-                      'realsense_link', 'realsense_imu']
         ),
         
     ])

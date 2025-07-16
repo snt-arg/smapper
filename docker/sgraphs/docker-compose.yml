@@ -1,0 +1,22 @@
+services:
+    sgraphs:
+        image: devcontainer_sgraphs:ros_humble
+        container_name: devcontainer_ros_sgraphs
+        build:
+            context: .
+            dockerfile: sgraphs.Dockerfile
+            args:
+                USECOLCON_JOBSRNAME: $USERNAME
+                COLCON_JOBS: 10
+        volumes:
+            - $SSH_AUTH_SOCK:/ssh-agent # Forward local machine SSH key to docker
+            - /tmp/.X11-unix:/tmp/.X11-unix
+            - ./mprocs_conf.yaml:/workspace/src/s_graphs/.docker_real_mprocs.yaml
+            - ./s_graphs_ros2.rviz:/workspace/src/s_graphs/lidar_situational_graphs/rviz/s_graphs_ros2.rviz
+            - /run/media/pedros/smapper:/rosbags # Change this where your rosbags are located
+        environment:
+            DISPLAY: $DISPLAY
+        network_mode: "host"
+        privileged: true
+        stdin_open: true
+        tty: true

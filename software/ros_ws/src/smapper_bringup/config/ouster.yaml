@@ -28,7 +28,7 @@ ouster/os_driver:
         lidar_frame: os_lidar
         imu_frame: os_imu
         point_cloud_frame: os_lidar
-        pub_static_tf: true
+        pub_static_tf: false
         # proc_mask[optional]: use any combination of the 6 flags IMG, PCL, IMU, SCAN
         # RAW and TLM to enable or disable their respective messages.
         # proc_mask: IMU|PCL|SCAN|IMG|RAW|TLM

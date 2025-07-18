@@ -1,11 +1,13 @@
 enable_color: true
 rgb_camera:
     color_profile: 640x480x30
+    enable_auto_exposure: true
 
 enable_depth: true
 depth_module:
     depth_profile: 640x480x30
     infra_profile: 640x480x30
+    enable_auto_exposure: true
 
 align_depth.enable: true
 
@@ -17,8 +19,7 @@ unite_imu_method: 2 # 0-None, 1-copy, 2-linear_interpolation
 gyro_fps: 400
 accel_fps: 200
 
-pointcloud.enable: true
-# colorizer.enable: true
+pointcloud.enable: false
 
 publish_tf: true
 # tf_publish_rate: 1.0

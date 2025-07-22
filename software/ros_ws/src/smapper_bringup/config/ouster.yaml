@@ -21,7 +21,7 @@ ouster/os_driver:
         # TIME_FROM_PTP_1588 timestamp mode is used.
         ptp_utc_tai_offset: -37.0
         udp_profile_lidar: "RNG19_RFL8_SIG16_NIR16"
-        metadata: "/home/smapper/os-122436001165-metadata.json"
+        metadata: "/home/smapper/smapper/config/os-122436001165-metadata.json"
         lidar_port: 46750
         imu_port: 37267
         sensor_frame: os_sensor

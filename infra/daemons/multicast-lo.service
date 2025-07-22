@@ -1,0 +1,9 @@
+[Unit]
+Description=Enable Multicast on Loopback
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/ip link set lo multicast on
+
+[Install]
+WantedBy=multi-user.target

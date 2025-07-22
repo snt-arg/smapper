@@ -18,12 +18,12 @@ multicamera_node:
             print_modes: true
 
         camera_names:
-            - "front_right"
-            - "side_right"
             - "front_left"
+            - "front_right"
             - "side_left"
+            - "side_right"
         camera_urls:
-            - "package://smapper_bringup/config/calib/front_right_info.yaml"
-            - "package://smapper_bringup/config/calib/side_right_info.yaml"
             - "package://smapper_bringup/config/calib/front_left_info.yaml"
+            - "package://smapper_bringup/config/calib/front_right_info.yaml"
             - "package://smapper_bringup/config/calib/side_left_info.yaml"
+            - "package://smapper_bringup/config/calib/side_right_info.yaml"

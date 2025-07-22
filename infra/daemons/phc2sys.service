@@ -1,0 +1,10 @@
+[Unit]
+Description=PTP Hardware Clock Sync Daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/sbin/phc2sys -s eth0 -c CLOCK_REALTIME -O 0 -w
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

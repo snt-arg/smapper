@@ -1,0 +1,10 @@
+[Unit]
+Description=PTP Hardware Clock Sync Daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/sbin/ptp4l -i eth0 -f /etc/linuxptp/ptp4l.conf -m
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

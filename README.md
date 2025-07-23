@@ -1,15 +1,11 @@
-# smapper
+<div align="center">
+  <h1>🗺️ SMapper: A Portable Multimodal Sensing Platform</h1>
+</div>
 
-SMapper is a handheld device equipped with cameras and a 3D LiDAR which can be mounted on a robot.
+SMapper is a portable multimodal sensing platform designed for robotics research. It is equipped with an on-board computer, a 3D LiDAR, a set of 4 RGB cameras and a depth camera.
 
-## Documentation
+For more information, please visit the online documentation [here](https://snt-arg.github.io/smapper_docs/)
 
-Documentation can be built using docker or material mkdocs pip package.
 
-### Docker
-
-- For docker use `docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material` on the root of the project.
-
-### PIP
-
-Use `pip install mkdocs-material` to install mkdocs and use `mkdocs server` to preview documentation.
+> [!NOTE]
+> This device is the result of a Master's thesis conducted by Pedro Soares.

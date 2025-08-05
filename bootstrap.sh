@@ -278,6 +278,11 @@ install_mprocs(){
     log_info "Done!"
 }
 
+create_bags_folder(){
+    sudo mkdir /bags
+    sudo chown 1000:1000 -R /bags
+}
+
 
 log_warning "This script has never been executed on the real platform. It is very experimental!"
 
@@ -293,6 +298,7 @@ log_warning "You will need to enter sudo password. Be vigilant!"
 sleep 2
 
 clone_smapper_repo
+create_bags_folder
 
 update_system
 

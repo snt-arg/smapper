@@ -158,7 +158,7 @@ deploy_smapper_api(){
     curl -LsSf https://astral.sh/uv/install.sh | sh
 
     log_info "Creating symlink for smapper_api daemon"
-    sudo ln -s $SMAPPER_REPO_PATH/infra/daemons/smapper_api.service /etc/systemd/system/ptp4l.service
+    sudo ln -s $SMAPPER_REPO_PATH/infra/daemons/smapper_api.service /etc/systemd/system/smapper_api.service
 
     log_info "Enabling & Starting service"
     sudo systemctl daemon-reload
